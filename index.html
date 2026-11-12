@@ -12,14 +12,14 @@
 <header><div><div class="eyebrow">TA1FM • LORA APRS</div><h1>nrf52 Tracker Ayar Paneli</h1><p>USB seri bağlantı • Ayarları oku, değiştir, yedekle ve geri yükle</p></div><div id="connectionState" class="pill">● Bağlantı yok</div></header>
 <div id="browserNotice" class="notice">Chrome veya Edge tarayıcısında, güvenli HTTPS bağlantısında ya da localhost üzerinde kullanın. Seri bağlantı için cihazın USB ile bağlı olması gerekir.</div>
 <div class="actions"><button id="connectBtn" class="primary">🔌 Cihaza bağlan</button><button id="disconnectBtn" class="secondary" disabled>Bağlantıyı kes</button><button id="readBtn" class="secondary" disabled>↻ Cihazdan oku (p)</button><span id="readState" class="read-state" role="status" aria-live="polite">Cihaz bağlanmadı</span><button id="saveBtn" disabled>⬆ Ayarları cihaza yaz</button><button id="exportBtn" class="secondary">⬇ Ayarları indir (JSON)</button><label class="filebtn">⬆ Yedek dosyası aç<input id="importFile" type="file" accept=".json,application/json"></label></div>
-<div class="notice warning">Bu panel <strong>SX1262 (V0.9.6 OLED protokolü) ve SX1268 V0.9.13 Direct Flash</strong> sürümlerini destekler. SX1268 cihazında flash kayıt durumu ACTIVE olmalıdır. Yazmadan önce <strong>Cihazdan oku</strong> ile ayarları eşleştirin; yalnızca değişen alanlar yazılır. Mevcut ayarlar <strong>p</strong> komutunun çıktısından okunur. Yazma işlemi cihazın kalıcı hafızasını değiştirir. İlk denemede otomatik yayını kapalı tutmanız önerilir.</div>
+<div class="notice warning">Bu panel <strong>SX1262 OLED ve SX1268 V0.9.13–V0.9.14 Direct Flash</strong> sürümlerini destekler. SX1268 cihazında flash kayıt durumu ACTIVE olmalıdır. Yazmadan önce <strong>Cihazdan oku</strong> ile ayarları eşleştirin; yalnızca değişen alanlar yazılır. Mevcut ayarlar <strong>p</strong> komutunun çıktısından okunur. Yazma işlemi cihazın kalıcı hafızasını değiştirir. İlk denemede otomatik yayını kapalı tutmanız önerilir.</div>
 <div class="layout">
 <section class="card"><h2>📻 İstasyon ve çalışma modu</h2><div class="field"><label for="callsign">Çağrı işareti</label><input id="callsign" maxlength="12" placeholder="TA1FM-7" spellcheck="false"><div class="hint">Geçerli çağrı işareti gerekli. Çağrı işaretini değiştirmek cihazın AUTO ayarını da etkileyebilir.</div></div><div class="frow"><div class="field"><label for="auto">Otomatik yayın</label><select id="auto"><option value="off">Kapalı</option><option value="on">Açık</option></select></div><div class="field"><label for="positionMode">Konum gönderimi</label><select id="positionMode"><option value="smart">Smart Beaconing</option><option value="fixed">Sabit aralık</option></select></div></div><div class="frow"><div class="field"><label for="fixedMin">Sabit konum aralığı</label><select id="fixedMin"><option>1</option><option>3</option><option selected>5</option><option>10</option><option>15</option></select></div><div class="field"><label for="symbol">Hareket sembolü</label><select id="symbol"><option value="car">🚗 Araba</option><option value="walker">🚶 Yürüyen adam</option><option value="house">🏠 Ev (V0.9.4)</option></select><div class="hint">Motosiklet seçeneği Bu sürümde CAR, WALKER ve HOUSE kullanılabilir.</div></div></div></section>
 <section class="card"><h2>⏱ Beacon zamanlayıcıları</h2><div class="frow"><div class="field"><label for="wx">WX gönderim aralığı</label><select id="wx"><option value="off">Kapalı</option><option value="15">15 dakika</option><option value="30">30 dakika</option><option value="60" selected>60 dakika</option></select></div><div class="field"><label for="statusMin">Status gönderim aralığı</label><select id="statusMin"><option value="off">Kapalı</option><option value="15">15 dakika</option><option value="30" selected>30 dakika</option><option value="60">60 dakika</option></select></div></div><div class="frow"><div class="field"><label for="commentMin">Comment aralığı</label><select id="commentMin"><option value="off">Kapalı</option><option value="15">15 dakika</option><option value="30" selected>30 dakika</option><option value="60">60 dakika</option></select></div><div class="field"><label for="parkMin">Park algılama süresi</label><select id="parkMin"><option>1</option><option selected>3</option><option>5</option></select></div></div><div class="hint">WX için BME280 sensör gerekir. Comment ayrı RF yayını değil, konum paketine eklenen metindir.</div></section>
 <section class="card"><h2>💬 APRS metinleri</h2><div class="field"><label for="comment">Comment</label><textarea id="comment" maxlength="80" spellcheck="false">TA1FM nrf52 Tracker</textarea><div class="hint">Konum paketine eklenir. Türkçe özel karakter kullanmamayı öneririz.</div></div><div class="field"><label for="status">Status</label><textarea id="status" maxlength="80" spellcheck="false">TA1FM LoRa APRS Tracker 433.775 MHz</textarea><div class="hint">Bağımsız APRS Status paketinde gönderilir.</div></div></section>
 <section class="card"><h2>📡 LoRa çıkış gücü</h2><div class="field"><label for="txPower">TX Power (dBm)</label><input id="txPower" type="number" min="1" max="22" step="1" value="10" inputmode="numeric" required><div class="hint">1–22 arası tam sayı girin (dBm). Varsayılan 10 dBm. Kartın RF donanım sınırlarını doğrulamadan 22 dBm kullanmayın. Bunlar çip hedef gücüdür; anten çıkışı ölçülmelidir.</div></div></section>
 <section class="card wide"><h2>🖥️ OLED Ekran Ayarları — SX1262</h2>
-<div class="notice">SX1268 V0.9.13 firmware OLED ayarlarını <code>p</code> çıktısında bildirmediğinden bu bölüm otomatik olarak kilitlenir. Diğer ayarlar kaydedilebilir.</div>
+<div class="notice">SX1268 V0.9.13 sürümünde bu bölüm kilitlidir. V0.9.14 sürümü OLED ayarlarını bildirdiğinde panel kontrolleri otomatik açılır.</div>
 <div class="notice warning"><strong>Güvenli OLED kurtarma:</strong> Ekran tipi değişikliğini önce 20 saniyelik önizlemede deneyin. Görüntü düzgünse "Ekran tipini onayla" düğmesine basın; aksi hâlde otomatik olarak eski tipe döner. Ekran tipi, genel "Ayarları cihaza yaz" düğmesiyle kaydedilmez.</div>
 <div class="frow"><div class="field"><label for="oledDriver">OLED ekran tipi</label>
 <select id="oledDriver"><option value="sh1106">SH1106</option><option value="ssd1306">SSD1306</option></select>
@@ -47,7 +47,7 @@
 <p class="hint">Bu seçenekler SMART modunda ve AUTO açıkken etkilidir. Pil voltajı konum yorumuna eklenir; bağımsız RF paketi gönderilmez. Süreler hız arttıkça büyümemelidir.</p></section>
 <section class="card"><h2>📊 Canlı cihaz bilgileri</h2><div class="meta"><div>Firmware / Hafıza: <strong id="firmwareMode">Henüz tanınmadı</strong></div><div>GPS: <strong id="liveGps">—</strong></div><div>LoRa: <strong id="liveLora">—</strong></div><div>TX: <strong id="liveTx">—</strong></div><div>WX TX: <strong id="liveWxTx">—</strong></div><div>Son RX: <strong id="liveRx">—</strong></div></div><p class="hint">Seri Monitör ile bu panel aynı COM portunu aynı anda kullanamaz. Bağlanmadan önce Arduino Seri Monitör'ü kapatın.</p><div class="actions"><button id="posBtn" class="secondary" disabled>📍 Manuel konum TX (t)</button><button id="wxBtn" class="secondary" disabled>🌦 Manuel WX TX (w)</button><button id="statusBtn" class="secondary" disabled>📡 Manuel Status TX (v)</button></div><p class="hint">Manuel TX düğmeleri gerçekten RF yayını tetikler; yalnızca test amacıyla kullanın.</p></section>
 <section class="card wide"><h2>⌨️ Seri Monitör <small style="font-size:12px;font-weight:400;color:var(--muted)">115200 baud</small></h2><pre id="log" aria-live="polite">TA1FM ayar paneli hazır. Cihaza bağlanmak için üstteki düğmeye basın.</pre><div class="frow" style="align-items:end"><div class="field" style="flex:1"><label for="manualCmd">Elle komut gönder</label><input id="manualCmd" placeholder="p, comment?, status? ..." spellcheck="false"></div><button id="sendBtn" class="secondary" disabled>Gönder</button><button id="clearBtn" class="secondary">Log temizle</button></div></section>
-</div><p class="foot">TA1FM nrf52 Tracker • Web Panel v1.1 okuma göstergesi • SX1262 / SX1268 V0.9.13 uyumlu • GitHub Pages • Yerel çalışır; seri port verileri hiçbir sunucuya gönderilmez. JSON yedeği yalnızca ayarlarınızı içerir.</p>
+</div><p class="foot">TA1FM nrf52 Tracker • Web Panel v1.1 okuma göstergesi • SX1262 / SX1268 V0.9.13 / V0.9.14 uyumlu • GitHub Pages • Yerel çalışır; seri port verileri hiçbir sunucuya gönderilmez. JSON yedeği yalnızca ayarlarınızı içerir.</p>
 </main>
 <script>
 'use strict';
@@ -61,9 +61,13 @@ function note(s){const pre=$('log');pre.textContent+=(pre.textContent?'\n':'')+s
 function setOledButtons(){
   const connected=!!port;
   const direct=(firmwareMode==='direct');
-  $('oledDriver').disabled=direct;
-  $('oledSleep').disabled=direct;
-  if(direct) $('oledLive').textContent='SX1268 V0.9.13: Bu firmware seri OLED ayarını bildirmiyor. OLED alanları bu panelden değiştirilemez.';
+  // V0.9.13'te OLED komutlari yok, V0.9.14'te var.
+  // Ayrim cihazdan gercek [OLED] yaniti gelmesine dayanir.
+  const oledDestekli=connected && sawOledSettings;
+  $('oledDriver').disabled=!oledDestekli;
+  $('oledSleep').disabled=!oledDestekli;
+  if(direct && !sawOledSettings)
+    $('oledLive').textContent='SX1268 V0.9.13: OLED komutlari desteklenmiyor. V0.9.14 firmware gerekir.';
   for(const id of ['oledWakeBtn','oledTestBtn']) $(id).disabled=!connected||!sawOledSettings;
   $('oledConfirmBtn').disabled=!connected||!sawOledSettings;
   $('oledCancelBtn').disabled=!connected||!sawOledSettings;
@@ -84,6 +88,7 @@ function readLine(line){note('← '+line);const txt=line.trim();let m;
  if((m=txt.match(/^\[OLED\] driver=(sh1106|ssd1306) sleep=([0-6]) ready=([01]) preview=([01])$/))){
     $('oledDriver').value=m[1];$('oledSleep').value=m[2]; sawOledSettings=true;
     $('oledLive').textContent=(m[1].toUpperCase()+' • '+$('oledSleep').selectedOptions[0].text+' • '+(m[3]==='1'?'OLED I2C hazır':'OLED I2C hazır değil')+(m[4]==='1'?' • Önizleme aktif':''));
+    if(firmwareMode==='direct') $('firmwareMode').textContent='SX1268 / Direct Flash: '+directStatus+' • OLED Web';
     setOledButtons(); 
   }
   if((m=txt.match(/^\[STATUS\] Call:\s*(.+)$/))){$('callsign').value=m[1].trim();readHasCall=true;}
@@ -117,7 +122,7 @@ function readLine(line){note('← '+line);const txt=line.trim();let m;
       if(directStatus!=='ACTIVE'){
         deviceSnapshot=null;note('[UYARI] SX1268 Direct Flash etkin değil; yazma engellendi.');
       } else {
-        deviceSnapshot=snapshot(); note('[OKUMA] SX1268 Direct Flash ayarları okundu (OLED ayarları hariç).');
+        deviceSnapshot=snapshot(); note('[OKUMA] SX1268 Direct Flash ayarları okundu'+(sawOledSettings?' (OLED dahil).':' (OLED ayarları hariç).'));
       }
     } else if(sawOledSettings){
       deviceSnapshot=snapshot();$('firmwareMode').textContent='SX1262 / OLED protokolü';
@@ -157,7 +162,7 @@ $('exportBtn').onclick=()=>{const json=JSON.stringify({format:'TA1FM-nrf52-Track
 $('importFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{if(f.size>100000)throw Error('Yedek dosyası çok büyük');const data=JSON.parse(await f.text());if(data.format!=='TA1FM-nrf52-Tracker-settings'||data.schemaVersion!==1||!data.settings)throw Error('Geçerli TA1FM yedek dosyası değil');applySnapshot(data.settings);imported=true;note('[YEDEK] Ayarlar forma yüklendi. Cihaza yazılmadı; önce kontrol edip Yaz düğmesine basın.');}catch(err){alert('Yedek okunamadı: '+err.message);}finally{e.target.value='';}};
 $('oledWakeBtn').onclick=()=>queue('oled wake').catch(e=>note('[HATA] '+e.message));
 $('oledTestBtn').onclick=async()=>{
- if(!sawOledSettings){alert('Önce V0.9.6 cihazdan ayarları okuyun');return;}
+ if(!sawOledSettings){alert('OLED bilgisini veren destekli firmware gerekir. Önce Cihazdan Oku kullanın.');return;}
  if(!confirm('Seçili OLED sürücüsü 20 saniye denenecek. Bu sırada cihazın ekranını gözleyin. Devam?'))return;
  await queue('oled '+$('oledDriver').value).catch(e=>note('[OLED HATA] '+e.message));
 };
@@ -180,9 +185,9 @@ $('saveBtn').onclick=async()=>{
  }
  if(firmwareMode==='direct'){
     if(directStatus!=='ACTIVE'){alert('SX1268 Direct Flash henüz ACTIVE değil; kayıt yapılmayacak.');return;}
-    if(s.oledSleep!==deviceSnapshot.oledSleep){alert('Bu SX1268 firmware OLED süresini seri porttan bildirmiyor. OLED ayarını burada değiştirmeyin.');return;}
+    if(!sawOledSettings && s.oledSleep!==deviceSnapshot.oledSleep){alert('Bu SX1268 firmware OLED süresini bildirmiyor. V0.9.14 gerekir.');return;}
   } else if(!sawOledSettings){alert('OLED ayarları okunamadı. Önce cihazı yeniden okutun.');return;}
- const commands=[...(firmwareMode==='direct'?[]:[['oledSleep','sleep '+s.oledSleep]]),['callsign','c '+call],['positionMode','f '+s.positionMode],['fixedMin','i '+s.fixedMin],['wx','x '+s.wx],['statusMin','z '+s.statusMin],['commentMin','j '+s.commentMin],['parkMin','k '+s.parkMin],['symbol','s '+s.symbol],['comment','comment '+cm],['status','status '+st],['auto','a '+s.auto],['txPower','power '+s.txPower]];
+ const commands=[...(sawOledSettings?[['oledSleep','sleep '+s.oledSleep]]:[]),['callsign','c '+call],['positionMode','f '+s.positionMode],['fixedMin','i '+s.fixedMin],['wx','x '+s.wx],['statusMin','z '+s.statusMin],['commentMin','j '+s.commentMin],['parkMin','k '+s.parkMin],['symbol','s '+s.symbol],['comment','comment '+cm],['status','status '+st],['auto','a '+s.auto],['txPower','power '+s.txPower]];
  const smartKeys=['smart7','smart10','smart20','smart49','smart60','smart90'];
  if(smartKeys.some(k=>s[k]!==deviceSnapshot[k])) commands.push(['smartIntervals','smart '+intervals.join(',')]);
  if(s.smartMotion!==deviceSnapshot.smartMotion) commands.push(['smartMotion','motion '+s.smartMotion]);
