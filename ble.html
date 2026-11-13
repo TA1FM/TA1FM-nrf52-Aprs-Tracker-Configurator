@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TA1FM nrf52 Tracker | USB + BLE V0.9.20</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--card:#152135;--line:#2d3b52;--text:#edf4ff;--muted:#a9b8cd;--cyan:#3ed9ce;--blue:#4d92fa;--red:#ff7f8a;--green:#74dfb1}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0,#152d47,#0b1220 55%);font:15px system-ui,-apple-system,Segoe UI,sans-serif;color:var(--text)}main{max-width:1120px;margin:0 auto;padding:30px 18px 60px}h1{font-size:29px;margin:4px 0 4px}h2{font-size:18px;margin:0 0 16px}p{line-height:1.5;color:var(--muted)}header{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:24px}.eyebrow{letter-spacing:.16em;color:var(--cyan);font-weight:750;font-size:11px}.pill{border:1px solid var(--line);border-radius:100px;padding:9px 15px;color:var(--muted)}.pill.online{color:var(--green);border-color:#286950}.actions{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0 24px}button,.filebtn{border:1px solid #42628c;border-radius:10px;padding:11px 16px;background:#1e4268;color:#f3f8ff;font:inherit;font-weight:650;cursor:pointer}button:hover,.filebtn:hover{filter:brightness(1.16)}button:disabled{opacity:.45;cursor:not-allowed}button.secondary,.filebtn{background:#16283f;border-color:var(--line)}button.danger{background:#4a2333;border-color:#7e3f4d}button.primary{background:#146967;border-color:#209c93}.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}.card{padding:21px;background:rgba(21,33,53,.94);border:1px solid var(--line);border-radius:15px;box-shadow:0 12px 35px #03081022}.wide{grid-column:1/-1}label{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}input:not([type=file]),select,textarea{display:block;width:100%;border-radius:9px;background:#0d1829;border:1px solid #364963;color:var(--text);padding:11px 12px;font:inherit;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--cyan)}textarea{resize:vertical;min-height:66px}.field{margin-bottom:16px}.hint{color:var(--muted);font-size:12px;line-height:1.5;margin-top:6px}.notice{border-left:3px solid var(--cyan);background:#12303c;border-radius:8px;padding:12px 15px;margin-bottom:16px;color:#defbf9;line-height:1.5}.warning{border-left-color:#e5b762;background:#342c1d;color:#f9e8bf}.meta{display:flex;flex-wrap:wrap;gap:12px;color:var(--muted);font-size:13px}.meta strong{color:var(--text)}pre{background:#080f1b;border:1px solid var(--line);border-radius:12px;min-height:210px;max-height:340px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;padding:14px;font:12.5px/1.6 Consolas,monospace;color:#c8e3f9}.frow{display:flex;gap:11px;flex-wrap:wrap}.frow>.field{flex:1;min-width:150px}.filebtn input{display:none}.check{display:flex;gap:9px;align-items:center;color:var(--text);font-size:14px}.check input{accent-color:var(--cyan);width:16px;height:16px}.foot{margin-top:24px;font-size:13px;color:var(--muted)}@media(max-width:720px){.layout{grid-template-columns:1fr}main{padding:20px 12px}.card{padding:16px}h1{font-size:24px}} 
+ .read-state{display:inline-flex;align-items:center;border:1px solid #3c5771;border-radius:9px;padding:9px 12px;color:#b9c9df;background:#10263d;font-size:13px;min-height:43px}.read-state.ok{border-color:#247d65;color:#9af7d0;background:#11382f}.read-state.busy{border-color:#a77736;color:#ffe0a5;background:#3d301d}.read-state.fail{border-color:#934650;color:#ffb7bc;background:#3c202a}#readBtn:not(:disabled){opacity:1;box-shadow:0 0 0 1px #5c86b0 inset}#readBtn:focus-visible{outline:2px solid #72e5dc;outline-offset:2px}
+
+/* TA1FM V0.9.18 Web Bluetooth live dashboard: isolated from legacy USB controls. */
+.ble-panel{margin:16px 0 22px;border-color:#34516a}
+.ble-title{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.ble-title h2{margin:0}
+.ble-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:15px 0}
+.ble-metric{background:#0d1829;border:1px solid #344960;border-radius:10px;padding:12px;min-height:75px}
+.ble-metric span{display:block;font-size:12px;color:var(--muted);margin-bottom:9px}
+.ble-metric strong{font-size:19px;overflow-wrap:anywhere}
+.ble-state{font-size:13px;color:var(--muted)}
+.ble-state.good{color:var(--green)}
+#bleLog{min-height:55px;max-height:140px;font-size:12px;margin:10px 0 0}
+.ble-top{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.ble-lockbox{border:1px solid #42628c;background:#10243a;border-radius:12px;padding:15px;margin:14px 0}
+.ble-lockhead{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.ble-lockcontrols{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.ble-lockcontrols button{min-height:44px}
+.ble-lockstatus{font-variant-numeric:tabular-nums;color:var(--muted)}
+.ble-lockstatus.open{color:var(--green)}
+@media(max-width:720px){.ble-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.ble-metric strong{font-size:17px}}
+</style>
+</head>
+<body><main>
+<header><div><div class="eyebrow">TA1FM • LORA APRS</div><h1>nrf52 Tracker Ayar Paneli</h1><p>USB ve Bluetooth üzerinden ayar yönetimi • V0.9.20</p></div><div id="connectionState" class="pill">● Bağlantı yok</div></header>
+<div id="browserNotice" class="notice">HTTPS üzerinden açın. USB ayarları için masaüstü Chrome/Edge, Bluetooth canlı takip için Android Chrome kullanın. Bluetooth ve USB farklı bağlantılardır.</div>
+<div class="actions"><button id="connectBtn" class="primary">🔌 Cihaza bağlan</button><button id="disconnectBtn" class="secondary" disabled>Bağlantıyı kes</button><button id="readBtn" class="secondary" disabled>↻ Cihazdan oku (p)</button><span id="readState" class="read-state" role="status" aria-live="polite">Cihaz bağlanmadı</span><button id="saveBtn" disabled>⬆ Ayarları cihaza yaz</button><button id="exportBtn" class="secondary">⬇ Ayarları indir (JSON)</button><label class="filebtn">⬆ Yedek dosyası aç<input id="importFile" type="file" accept=".json,application/json"></label></div>
+<div class="notice warning">USB bölümü <strong>SX1262 / SX1268 Direct Flash</strong> firmware komutlarıyla çalışır. V0.9.18 UNIVERSAL BLE cihazlarında da USB bağlantısı kullanılabilir. Flash kayıt durumu ACTIVE olmalıdır. Yazmadan önce <strong>Cihazdan oku</strong> ile ayarları eşleştirin; yalnızca değişen alanlar yazılır. Mevcut ayarlar <strong>p</strong> komutunun çıktısından okunur. Yazma işlemi cihazın kalıcı hafızasını değiştirir. İlk denemede otomatik yayını kapalı tutmanız önerilir.</div>
+
+<section class="card wide ble-panel" aria-label="Bluetooth BLE canlı takip">
+  <div class="ble-title"><h2>📶 Bluetooth BLE — Canlı Tracker Durumu</h2><span id="bleState" class="pill">● BLE bağlı değil</span></div>
+  <p class="hint"><strong>V0.9.20 UNIVERSAL BLE WEB LOCK</strong> ile ayarları Bluetooth üzerinden okuyup değiştirebilirsiniz. Kaydetmek için aşağıdan PIN ile <strong>Yazma Kilidini Aç</strong> seçin. İzin <strong>3 dakika</strong> geçerlidir; bağlantı kopunca, süre dolunca veya kayıt başarılı olunca kapanır. <strong>OLED sürücüsü ve LoRa çipi Bluetooth üzerinden değiştirilemez</strong>; USB yolu korunur. <strong>Not:</strong> Eşleştirmesiz BLE UART üzerindeki PIN yalnızca basit bir korumadır, şifrelenmiş bağlantı yerine geçmez.</p>
+  <div class="actions">
+    <button id="bleConnectBtn" class="primary" type="button">📶 Bluetooth ile bağlan</button>
+    <button id="bleDisconnectBtn" class="secondary" type="button" disabled>Bağlantıyı kes</button>
+    <button id="bleInfoBtn" class="secondary" type="button" disabled>↻ Durumu oku</button>
+    <button id="blePingBtn" class="secondary" type="button" disabled>↔ PING testi</button>
+    <button id="bleCfgReadBtn" class="secondary" type="button" disabled>↻ BLE Ayarları Oku</button>
+    <button id="bleCfgSaveBtn" type="button" disabled>⬆ BLE Ayarları Kaydet</button>
+  </div>
+  <div class="ble-lockbox" aria-label="Bluetooth yazma kilidi">
+    <div class="ble-lockhead"><strong>🔐 Bluetooth Yazma Kilidi</strong><span id="bleLockStatus" class="ble-lockstatus">🔒 Kilitli</span></div>
+    <p class="hint" style="margin:8px 0 12px">Ayarları okuyabilirsin; değişiklikleri flash'a kaydetmek için PIN ile 3 dakikalık izin aç. Fiziksel tuş gerekmez.</p>
+    <div class="ble-lockcontrols">
+      <div class="field" style="margin:0;max-width:220px;flex:1"><label for="blePin">Yazma PIN'i</label><input id="blePin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="PIN gir"></div>
+      <button id="bleUnlockBtn" type="button" class="primary" disabled>🔓 Kilidi Aç (3 dk)</button>
+      <button id="bleCloseLockBtn" type="button" class="secondary" disabled>🔒 Kilidi Kapat</button>
+      <button id="bleLockBtn" class="secondary" type="button" disabled>↻ Kilit Durumu</button>
+    </div>
+  </div>
+  <div class="ble-metrics" aria-live="polite">
+    <div class="ble-metric"><span>APRS çağrı işareti</span><strong id="bleCall">—</strong></div>
+    <div class="ble-metric"><span>LoRa çipi</span><strong id="bleChip">—</strong></div>
+    <div class="ble-metric"><span>GPS konumu</span><strong id="bleGps">—</strong></div>
+    <div class="ble-metric"><span>Uydular</span><strong id="bleSat">—</strong></div>
+    <div class="ble-metric"><span>LoRa RF</span><strong id="bleRf">—</strong></div>
+    <div class="ble-metric"><span>Pil voltajı</span><strong id="bleBat">—</strong></div>
+    <div class="ble-metric"><span>Son veri</span><strong id="bleLast">—</strong></div>
+    <div class="ble-metric"><span>Komut testi</span><strong id="bleTest">—</strong></div>
+  </div>
+  <p class="ble-state" id="bleCfgState" role="status">Önce Bluetooth ile bağlanıp “BLE Ayarları Oku” seçin. Formdaki mevcut değerler dolacak. Kaydetmek için web panelinden PIN ile kilidi açın.</p>
+  <p class="ble-state" id="bleHelp" role="status">Android telefonda Chrome ile açın. Önce nRF Connect'ten bağlantıyı kesin, ardından “Bluetooth ile bağlan” düğmesine dokunun.</p>
+  <details><summary>Bluetooth haberleşme günlüğü</summary><pre id="bleLog">BLE paneli hazır.</pre></details>
+</section>
+<div class="layout">
+<section class="card"><h2>📻 İstasyon ve çalışma modu</h2><div class="field"><label for="callsign">Çağrı işareti</label><input id="callsign" maxlength="12" placeholder="TA1FM-7" spellcheck="false"><div class="hint">Geçerli çağrı işareti gerekli. Çağrı işaretini değiştirmek cihazın AUTO ayarını da etkileyebilir.</div></div><div class="frow"><div class="field"><label for="auto">Otomatik yayın</label><select id="auto"><option value="off">Kapalı</option><option value="on">Açık</option></select></div><div class="field"><label for="positionMode">Konum gönderimi</label><select id="positionMode"><option value="smart">Smart Beaconing</option><option value="fixed">Sabit aralık</option></select></div></div><div class="frow"><div class="field"><label for="fixedMin">Sabit konum aralığı</label><select id="fixedMin"><option>1</option><option>3</option><option selected>5</option><option>10</option><option>15</option></select></div><div class="field"><label for="symbol">Hareket sembolü</label><select id="symbol"><option value="car">🚗 Araba</option><option value="walker">🚶 Yürüyen adam</option><option value="house">🏠 Ev (V0.9.4)</option></select><div class="hint">Motosiklet seçeneği Bu sürümde CAR, WALKER ve HOUSE kullanılabilir.</div></div></div></section>
+<section class="card"><h2>⏱ Beacon zamanlayıcıları</h2><div class="frow"><div class="field"><label for="wx">WX gönderim aralığı</label><select id="wx"><option value="off">Kapalı</option><option value="15">15 dakika</option><option value="30">30 dakika</option><option value="60" selected>60 dakika</option></select></div><div class="field"><label for="statusMin">Status gönderim aralığı</label><select id="statusMin"><option value="off">Kapalı</option><option value="15">15 dakika</option><option value="30" selected>30 dakika</option><option value="60">60 dakika</option></select></div></div><div class="frow"><div class="field"><label for="commentMin">Comment aralığı</label><select id="commentMin"><option value="off">Kapalı</option><option value="15">15 dakika</option><option value="30" selected>30 dakika</option><option value="60">60 dakika</option></select></div><div class="field"><label for="parkMin">Park algılama süresi</label><select id="parkMin"><option>1</option><option selected>3</option><option>5</option></select></div></div><div class="hint">WX için BME280 sensör gerekir. Comment ayrı RF yayını değil, konum paketine eklenen metindir.</div></section>
+<section class="card"><h2>💬 APRS metinleri</h2><div class="field"><label for="comment">Comment</label><textarea id="comment" maxlength="80" spellcheck="false">TA1FM nrf52 Tracker</textarea><div class="hint">Konum paketine eklenir. Türkçe özel karakter kullanmamayı öneririz.</div></div><div class="field"><label for="status">Status</label><textarea id="status" maxlength="80" spellcheck="false">TA1FM LoRa APRS Tracker 433.775 MHz</textarea><div class="hint">Bağımsız APRS Status paketinde gönderilir.</div></div></section>
+<section class="card"><h2>📡 LoRa çıkış gücü</h2><div class="field"><label for="txPower">TX Power (dBm)</label><input id="txPower" type="number" min="1" max="22" step="1" value="10" inputmode="numeric" required><div class="hint">1–22 arası tam sayı girin (dBm). Varsayılan 10 dBm. Kartın RF donanım sınırlarını doğrulamadan 22 dBm kullanmayın. Bunlar çip hedef gücüdür; anten çıkışı ölçülmelidir.</div></div></section>
+<section class="card wide"><h2>🖥️ OLED Ekran Ayarları — SX1262 / SX1268</h2>
+<div class="notice">SX1262 ve SX1268 V0.9.14 için OLED ayarları üstteki <strong>“Ayarları cihaza yaz”</strong> düğmesiyle kaydedilir. SX1268 V0.9.13 için OLED seçimi desteklenmez.</div>
+<div class="notice warning"><strong>Kolay kayıt:</strong> OLED tipini seçin ve üstteki <strong>“Ayarları cihaza yaz”</strong> düğmesine basın. Panel OLED deneme ve onay komutlarını tek USB aktarımında gönderir; kalıcı kaydı cihazdan doğrular. <strong>Uyarı:</strong> Yanlış ekran tipi seçilirse görüntü kaybolabilir; cihazın fiziksel OLED değiştirme düğmesiyle geri alınabilir.</div>
+<div class="frow"><div class="field"><label for="oledDriver">OLED ekran tipi</label>
+<select id="oledDriver"><option value="sh1106">SH1106</option><option value="ssd1306">SSD1306</option></select>
+<div class="hint">Ekran tipini seçin ve üstteki “Ayarları cihaza yaz” düğmesine basın. Doğru OLED tipini seçtiğinizden emin olun.</div></div>
+<div class="field"><label for="oledSleep">Ekran kapanma süresi</label>
+<select id="oledSleep"><option value="0">Sürekli açık</option><option value="1">Sürekli kapalı (tuşla geçici uyandırma)</option><option value="2">15 saniye</option><option value="3" selected>30 saniye</option><option value="4">1 dakika</option><option value="5">2 dakika</option><option value="6">5 dakika</option></select>
+<div class="hint">Bu ayar diğer alanlarla birlikte "Ayarları cihaza yaz" ile kalıcı kaydedilir.</div></div></div>
+<div class="actions"><button class="secondary" id="oledWakeBtn" disabled>☀️ Ekranı geçici aç</button>
+<button class="secondary" id="oledTestBtn" style="display:none" disabled>🖥️ Ekran tipini dene (20 sn)</button>
+<button class="primary" id="oledConfirmBtn" style="display:none" disabled>✅ Ekran tipini onayla</button>
+<button class="secondary" id="oledCancelBtn" style="display:none" disabled>↶ Denemeyi iptal et</button></div>
+<div class="hint">Önce cihaza bağlanıp “Cihazdan oku” seçin. Ekran tipini belirleyin; üstteki “Ayarları cihaza yaz” düğmesi değişikliği kalıcı kaydeder. Yanlış OLED tipi seçilirse fiziksel butonla düzeltin.</div>
+<div class="meta">OLED durumu: <strong id="oledLive">Cihazdan okunmadı</strong></div>
+</section>
+<section class="card wide"><h2>🚗 Smart Beacon — Hız ve Süre Ayarları</h2>
+<div class="notice">V0.9.5 varsayılanları. Hız ara değerlerinde süre kademeli hesaplanır. 1. hareket TX'i GPS fix ve RF güvenlik süresine tabidir.</div>
+<div class="frow"><div class="field"><label for="smart7">0–7 km/sa (saniye)</label><input type="number" id="smart7" value="600" min="15" max="3600" step="1"></div>
+<div class="field"><label for="smart10">10 km/sa (saniye)</label><input type="number" id="smart10" value="90" min="10" max="3600" step="1"></div>
+<div class="field"><label for="smart20">20 km/sa (saniye)</label><input type="number" id="smart20" value="45" min="10" max="3600" step="1"></div></div>
+<div class="frow"><div class="field"><label for="smart49">49 km/sa (saniye)</label><input type="number" id="smart49" value="30" min="10" max="3600" step="1"></div>
+<div class="field"><label for="smart60">60 km/sa (saniye)</label><input type="number" id="smart60" value="20" min="10" max="3600" step="1"></div>
+<div class="field"><label for="smart90">90+ km/sa (saniye)</label><input type="number" id="smart90" value="15" min="10" max="3600" step="1"></div></div>
+<div class="frow"><div class="field"><label for="smartMotion">İlk hareketi algılayınca konum gönder</label><select id="smartMotion"><option value="on" selected>Açık</option><option value="off">Kapalı</option></select></div>
+<div class="field"><label for="beaconBattery">Konum beacon'ında pil voltajı</label><select id="beaconBattery"><option value="on" selected>Açık</option><option value="off">Kapalı</option></select></div></div>
+<p class="hint">Bu seçenekler SMART modunda ve AUTO açıkken etkilidir. Pil voltajı konum yorumuna eklenir; bağımsız RF paketi gönderilmez. Süreler hız arttıkça büyümemelidir.</p></section>
+<section class="card"><h2>📊 Canlı cihaz bilgileri</h2><div class="meta"><div>Firmware / Hafıza: <strong id="firmwareMode">Henüz tanınmadı</strong></div><div>GPS: <strong id="liveGps">—</strong></div><div>LoRa: <strong id="liveLora">—</strong></div><div>TX: <strong id="liveTx">—</strong></div><div>WX TX: <strong id="liveWxTx">—</strong></div><div>Son RX: <strong id="liveRx">—</strong></div></div><p class="hint">Seri Monitör ile bu panel aynı COM portunu aynı anda kullanamaz. Bağlanmadan önce Arduino Seri Monitör'ü kapatın.</p><div class="actions"><button id="posBtn" class="secondary" disabled>📍 Manuel konum TX (t)</button><button id="wxBtn" class="secondary" disabled>🌦 Manuel WX TX (w)</button><button id="statusBtn" class="secondary" disabled>📡 Manuel Status TX (v)</button></div><p class="hint">Manuel TX düğmeleri gerçekten RF yayını tetikler; yalnızca test amacıyla kullanın.</p></section>
+<section class="card wide"><h2>⌨️ Seri Monitör <small style="font-size:12px;font-weight:400;color:var(--muted)">115200 baud</small></h2><pre id="log" aria-live="polite">TA1FM ayar paneli hazır. Cihaza bağlanmak için üstteki düğmeye basın.</pre><div class="frow" style="align-items:end"><div class="field" style="flex:1"><label for="manualCmd">Elle komut gönder</label><input id="manualCmd" placeholder="p, comment?, status? ..." spellcheck="false"></div><button id="sendBtn" class="secondary" disabled>Gönder</button><button id="clearBtn" class="secondary">Log temizle</button></div></section>
+</div><p class="foot">TA1FM nrf52 Tracker • Web Panel BLE CONFIG v1.4 • USB ve V0.9.20 BLE ayar yönetimi • GitHub Pages • Yerel çalışır; seri port verileri hiçbir sunucuya gönderilmez. JSON yedeği yalnızca ayarlarınızı içerir.</p>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id), keys=['oledDriver','oledSleep','callsign','auto','positionMode','fixedMin','symbol','wx','statusMin','commentMin','parkMin','comment','status','txPower','smart7','smart10','smart20','smart49','smart60','smart90','smartMotion','beaconBattery'];
+let port=null,reader=null,writer=null,reading=false,pending='',commandChain=Promise.resolve(),lastSnapshot='',deviceSnapshot=null,imported=false,sawSmartSettings=false,sawOledSettings=false;
+let firmwareMode='unknown', directStatus='unknown', directSequence=null, waitingForRead=false, readHasCall=false, readHasStatus=false;
+let readRequestActive=false, oledSaveResult='',usbDetectedChip='UNIVERSAL';
+function readFeedback(message,kind=''){const el=$('readState');el.textContent=message;el.className='read-state'+(kind?' '+kind:'');}
+function startReadFeedback(){readRequestActive=true;readFeedback('⏳ Cihaz okunuyor…','busy');note('[OKUMA] Cihazdan ayar istemi gönderiliyor.');}
+function note(s){const pre=$('log');pre.textContent+=(pre.textContent?'\n':'')+s; if(pre.textContent.length>55000)pre.textContent=pre.textContent.slice(-45000);pre.scrollTop=pre.scrollHeight;}
+function setOledButtons(){
+  const connected=!!port;
+  const direct=(firmwareMode==='direct');
+  // V0.9.13'te OLED komutlari yok, V0.9.14'te var.
+  // Ayrim cihazdan gercek [OLED] yaniti gelmesine dayanir.
+  const oledDestekli=connected && sawOledSettings;
+  $('oledDriver').disabled=!oledDestekli;
+  $('oledSleep').disabled=!oledDestekli;
+  if(direct && !sawOledSettings)
+    $('oledLive').textContent='SX1268 V0.9.13: OLED komutlari desteklenmiyor. V0.9.14 firmware gerekir.';
+  for(const id of ['oledWakeBtn','oledTestBtn']) $(id).disabled=!connected||!sawOledSettings;
+  $('oledConfirmBtn').disabled=!connected||!sawOledSettings;
+  $('oledCancelBtn').disabled=!connected||!sawOledSettings;
+}
+function snapshot(){return Object.fromEntries(keys.map(k=>[k,$(k).value]));}
+function applySnapshot(v){for(const k of keys){if(typeof v[k]!=='string')continue; const el=$(k);if(el.tagName==='SELECT'){if([...el.options].some(o=>o.value===v[k]))el.value=v[k];}else el.value=v[k];}}
+function readLine(line){note('← '+line);const txt=line.trim();let m;
+  if((m=txt.match(/^\[DIRECT\] mode=(ACTIVE|LEGACY READ ONLY)/))){
+    firmwareMode='direct'; directStatus=m[1];
+    $('firmwareMode').textContent=usbDetectedChip+' / Direct Flash: '+m[1];
+    if(m[1]!=='ACTIVE') note('[UYARI] Direct Flash henüz etkin değil. Bu panel flash init komutunu göndermez; ayar yazma kapalı.');
+    setOledButtons();
+  }
+  if((m=txt.match(/^\[DIRECT\] seq=(\d+)/))) directSequence=Number(m[1]);
+  if((m=txt.match(/^\[DIRECT\] chip=(SX1262|SX1268)$/))){usbDetectedChip=m[1];$('firmwareMode').textContent=usbDetectedChip+' / Direct Flash: '+directStatus;}
+  if((m=txt.match(/^\[CHIP\] selected=(SX1262|SX1268)/))){usbDetectedChip=m[1];$('firmwareMode').textContent=usbDetectedChip+' / Direct Flash: '+directStatus;}
+  if(/^\[DIRECT\] SAVED slot /.test(txt)) note('[KAYIT] Cihaz Direct Flash kayıt başarı yanıtı verdi.');
+  if(txt.includes('[OLED] DRIVER SAVED')) oledSaveResult='ok';
+  if(txt.includes('[OLED] DRIVER SAVE FAILED') || txt.includes('[OLED] ONAYLANACAK WEB ONIZLEMESI YOK') || txt.includes('[OLED] ONIZLEME BASLATILAMADI') || txt.includes('[OLED] DIRECT FLASH AKTIF DEGIL')) oledSaveResult='fail';
+  if(txt.startsWith('[DIRECT] WRITE FAILED')||txt.startsWith('[DIRECT] ERROR')||txt.includes('assertion')) note('[UYARI] Cihaz kayıt hatası bildirdi!');
+
+ if((m=txt.match(/^\[OLED\] driver=(sh1106|ssd1306) sleep=([0-6]) ready=([01]) preview=([01])$/))){
+    $('oledDriver').value=m[1];$('oledSleep').value=m[2]; sawOledSettings=true;
+    $('oledLive').textContent=(m[1].toUpperCase()+' • '+$('oledSleep').selectedOptions[0].text+' • '+(m[3]==='1'?'OLED I2C hazır':'OLED I2C hazır değil')+(m[4]==='1'?' • Önizleme aktif':''));
+    if(firmwareMode==='direct') $('firmwareMode').textContent=usbDetectedChip+' / Direct Flash: '+directStatus+' • OLED Web';
+    setOledButtons(); 
+  }
+  if((m=txt.match(/^\[STATUS\] Call:\s*(.+)$/))){$('callsign').value=m[1].trim();readHasCall=true;}
+ if((m=txt.match(/^\[STATUS\] GPS fix:\s*(.+)$/)))$('liveGps').textContent=m[1].trim();
+ if((m=txt.match(/^\[STATUS\] LoRa RX:\s*(.+)$/)))$('liveLora').textContent=m[1].trim();
+ if((m=txt.match(/^\[TXPOWER\] ([1-9]|1[0-9]|2[0-2]) dBm$/)))$('txPower').value=m[1];
+ if((m=txt.match(/^\[SMART\] rates=(\d+),(\d+),(\d+),(\d+),(\d+),(\d+) motion=(on|off) batt=(on|off)$/))){
+   ['smart7','smart10','smart20','smart49','smart60','smart90'].forEach((k,i)=>$(k).value=m[i+1]);
+   $('smartMotion').value=m[7];$('beaconBattery').value=m[8];sawSmartSettings=true;
+ }
+ if((m=txt.match(/^\[STATUS\] TX count:\s*(\d+)/)))$('liveTx').textContent=m[1];
+ if((m=txt.match(/^\[STATUS\] WX TX count:\s*(\d+)/)))$('liveWxTx').textContent=m[1];
+ if((m=txt.match(/^\[RX\] Last heard:\s*(.+)$/)))$('liveRx').textContent=m[1].trim();
+ if((m=txt.match(/^\[TEXT\] Comment:\s*(.*)$/)))$('comment').value=m[1];
+ if((m=txt.match(/^\[TEXT\] Status:\s*(.*)$/))){$('status').value=m[1];readHasStatus=true;}
+ if((m=txt.match(/^\[COMMENT\]\s*(.+)$/)) && !/^saved/i.test(m[1]))$('comment').value=m[1];
+ if((m=txt.match(/^\[STATUS TEXT\]\s*(.+)$/)) && !/^saved/i.test(m[1]))$('status').value=m[1];
+ if((m=txt.match(/^\[AUTO\] mode=(ON|OFF)\b/)))$('auto').value=m[1].toLowerCase();
+ if((m=txt.match(/^\[AUTO\] mode=(?:ON|OFF).*?\bPOS=(SMART|FIXED)\b/)))$('positionMode').value=m[1].toLowerCase();
+ if((m=txt.match(/^\[AUTO\] mode=(?:ON|OFF).*?\bFIXEDmin=(\d+)/)))$('fixedMin').value=m[1];
+ if((m=txt.match(/^\[AUTO\] mode=(?:ON|OFF).*?\bWXmin=(OFF|\d+)/i)))$('wx').value=m[1].toLowerCase();
+ if((m=txt.match(/^\[AUTO\] mode=(?:ON|OFF).*?\bSTATUSmin=(OFF|\d+)/i)))$('statusMin').value=m[1].toLowerCase();
+ if((m=txt.match(/^\[AUTO\] mode=(?:ON|OFF).*?\bCOMMENTmin=(OFF|\d+)/i)))$('commentMin').value=m[1].toLowerCase();
+ if((m=txt.match(/^\[AUTO\] mode=(?:ON|OFF).*?\bParkMin=(\d+)/)))$('parkMin').value=m[1];
+ if((m=txt.match(/^\[AUTO\] mode=(?:ON|OFF).*?\bSymbol=(\d+)(.)/))){const table=Number(m[1]),symbol=m[2]; const map={'47>':'car','47[':'walker','47-':'house','92>':'car','92P':'car'};if(map[table+symbol])$('symbol').value=map[table+symbol];}
+ if(txt.startsWith('[CMDS] comment TEXT')){
+    if(firmwareMode==='unknown' && sawOledSettings) firmwareMode='legacy';
+    if(!sawSmartSettings || !readHasCall || !readHasStatus){
+      deviceSnapshot=null;note('[UYARI] Eksik ayar yanıtı. Önce yeniden Cihazdan oku seçin.');
+    } else if(firmwareMode==='direct'){
+      if(directStatus!=='ACTIVE'){
+        deviceSnapshot=null;note('[UYARI] SX1268 Direct Flash etkin değil; yazma engellendi.');
+      } else {
+        deviceSnapshot=snapshot(); note('[OKUMA] SX1268 Direct Flash ayarları okundu'+(sawOledSettings?' (OLED dahil).':' (OLED ayarları hariç).'));
+      }
+    } else if(sawOledSettings){
+      deviceSnapshot=snapshot();$('firmwareMode').textContent='SX1262 / OLED protokolü';
+      note('[OKUMA] SX1262 ayarları okundu.');
+    } else {
+      deviceSnapshot=null;note('[UYARI] Firmware tanımlanamadı. Ayar yazma kapalı.');
+    }
+    if(readRequestActive){
+      if(deviceSnapshot){readFeedback('✓ Ayarlar okundu • '+(firmwareMode==='direct'?usbDetectedChip:'SX1262'),'ok');}
+      else{readFeedback('⚠ Okuma eksik • seri konsolu kontrol edin','fail');}
+      readRequestActive=false;
+    }
+    setOledButtons();
+  }
+}
+async function rxLoop(){reading=true;const decoder=new TextDecoder();try{while(port?.readable){reader=port.readable.getReader();try{while(true){const {value,done}=await reader.read();if(done)break;pending+=decoder.decode(value,{stream:true});const lines=pending.split(/\r\n|\n|\r/);pending=lines.pop()??'';for(const l of lines)if(l.trim())readLine(l);}}finally{reader.releaseLock();reader=null;}break;}}catch(e){note('[BAĞLANTI] Okuma durdu: '+e.message);}finally{reading=false;setConnection(false);}}
+function setConnection(on){for(const id of ['disconnectBtn','readBtn','saveBtn','sendBtn','posBtn','wxBtn','statusBtn'])$(id).disabled=!on;$('connectBtn').disabled=on;setOledButtons();$('connectionState').textContent=on?'● Bağlı':'● Bağlantı yok';$('connectionState').classList.toggle('online',on);if(!on){readRequestActive=false;readFeedback('Bağlantı yok');}else if(!readRequestActive){readFeedback('Hazır • Cihazdan oku düğmesi aktif');}}
+async function sendRaw(cmd){if(!port?.writable)throw Error('Önce seri porta bağlanın.');const enc=new TextEncoder();const w=port.writable.getWriter();try{await w.write(enc.encode(cmd+'\n'));note('→ '+cmd);}finally{w.releaseLock();}}
+function queue(cmd){commandChain=commandChain.catch(()=>{}).then(()=>sendRaw(cmd));return commandChain;}
+// OLED onizleme ve onay: iki komut tek USB aktariminda gonderilir.
+// Her bir writer.write'in bitmesini ayri ayri beklemek 20 saniyelik sureyi tuketebiliyor.
+async function sendOledAndConfirm(driver){
+ if(!port?.writable) throw Error('Seri port bagli degil.');
+ const w=port.writable.getWriter();
+ try{
+   const payload=new TextEncoder().encode('oled '+driver+'\noled confirm\n');
+   await w.write(payload);
+   note('→ oled '+driver+' + oled confirm (tek USB aktarimi)');
+ } finally{w.releaseLock();}
+}
+function queueOledAndConfirm(driver){commandChain=commandChain.catch(()=>{}).then(()=>sendOledAndConfirm(driver));return commandChain;}
+const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+$('connectBtn').onclick=async()=>{if(!('serial'in navigator)){alert('Web Serial desteklenmiyor. Masaüstü Chrome veya Edge kullanın.');return;}try{port=await navigator.serial.requestPort();await port.open({baudRate:115200});setConnection(true);note('[BAĞLANTI] 115200 baud açıldı');rxLoop();await delay(450);sawSmartSettings=false;sawOledSettings=false;firmwareMode='unknown';directStatus='unknown';readHasCall=false;readHasStatus=false;setOledButtons();startReadFeedback();await queue('flash?'); await delay(260); await queue('p');}catch(e){note('[HATA] '+e.message);if(port){try{await port.close();}catch{}}port=null;setConnection(false);}};
+$('disconnectBtn').onclick=async()=>{try{if(reader)await reader.cancel();await delay(40);if(port)await port.close();}catch(e){note('[UYARI] '+e.message);}finally{port=null;setConnection(false);note('[BAĞLANTI] Kesildi');}};
+$('readBtn').onclick=async()=>{
+  if(!port){readFeedback('Bağlantı yok','fail');return;}
+  sawSmartSettings=false;readHasCall=false;readHasStatus=false;deviceSnapshot=null;
+  startReadFeedback();
+  try{if(firmwareMode==='unknown') { await queue('flash?'); await delay(260); } await queue('p');}
+  catch(e){readRequestActive=false;readFeedback('⚠ Okuma komutu gönderilemedi','fail');note('[HATA] '+e.message);}
+};
+$('sendBtn').onclick=()=>{const c=$('manualCmd').value.trim();if(c){queue(c).catch(e=>note('[HATA] '+e.message));$('manualCmd').value='';}};
+$('manualCmd').addEventListener('keydown',e=>{if(e.key==='Enter')$('sendBtn').click();});
+$('clearBtn').onclick=()=>$('log').textContent='';
+$('posBtn').onclick=()=>{if(confirm('Gerçek RF konum paketi gönderilsin mi?'))queue('t').catch(e=>note('[HATA] '+e.message));};
+$('wxBtn').onclick=()=>{if(confirm('Gerçek RF WX paketi gönderilsin mi?'))queue('w').catch(e=>note('[HATA] '+e.message));};
+$('statusBtn').onclick=()=>{if(confirm('Gerçek RF Status paketi gönderilsin mi?'))queue('v').catch(e=>note('[HATA] '+e.message));};
+$('exportBtn').onclick=()=>{const json=JSON.stringify({format:'TA1FM-nrf52-Tracker-settings',schemaVersion:1,exportedAt:new Date().toISOString(),settings:snapshot()},null,2);const url=URL.createObjectURL(new Blob([json],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='TA1FM_Tracker_Ayarlar.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);note('[YEDEK] JSON indirildi.');};
+$('importFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{if(f.size>100000)throw Error('Yedek dosyası çok büyük');const data=JSON.parse(await f.text());if(data.format!=='TA1FM-nrf52-Tracker-settings'||data.schemaVersion!==1||!data.settings)throw Error('Geçerli TA1FM yedek dosyası değil');applySnapshot(data.settings);imported=true;note('[YEDEK] Ayarlar forma yüklendi. Cihaza yazılmadı; önce kontrol edip Yaz düğmesine basın.');}catch(err){alert('Yedek okunamadı: '+err.message);}finally{e.target.value='';}};
+$('oledWakeBtn').onclick=()=>queue('oled wake').catch(e=>note('[HATA] '+e.message));
+$('oledTestBtn').onclick=async()=>{
+ if(!sawOledSettings){alert('OLED bilgisini veren destekli firmware gerekir. Önce Cihazdan Oku kullanın.');return;}
+ if(!confirm('Seçili OLED sürücüsü 20 saniye denenecek. Bu sırada cihazın ekranını gözleyin. Devam?'))return;
+ await queue('oled '+$('oledDriver').value).catch(e=>note('[OLED HATA] '+e.message));
+};
+$('oledConfirmBtn').onclick=()=>{
+ if(confirm('Cihaz ekranında görüntü doğru mu? Yalnızca doğruysa onaylayın.'))
+   queue('oled confirm').catch(e=>note('[OLED HATA] '+e.message));
+};
+$('oledCancelBtn').onclick=()=>queue('oled cancel').catch(e=>note('[OLED HATA] '+e.message));
+$('saveBtn').onclick=async()=>{
+ const s=snapshot(),call=s.callsign.trim().toUpperCase(),cm=s.comment.trim(),st=s.status.trim();
+ if(!['car','walker','house'].includes(s.symbol)){alert('Bu özel APRS sembolü USB panelindeki s komutuyla değiştirilemez; BLE kayıt yolunu kullanın.');return;}
+ if(!/^[A-Z0-9]{1,8}(?:-\d{1,2})?$/.test(call)||call==='NOCALL'){alert('Geçerli çağrı işareti girin (ör. TA1FM-7).');return;}
+ if(/[\r\n]/.test(cm+st)){alert('Metinlerde satır sonu olamaz.');return;}
+ if(!/^[\x20-\x7E]*$/.test(cm+st)){alert('Comment ve Status için şimdilik ASCII karakter kullanın (Türkçe özel karakter kullanmayın).');return;}
+ if(!deviceSnapshot){alert('Önce "Cihazdan oku (p)" ile mevcut ayarları alın. Böylece gereksiz flash yazma önlenir.');return;}
+ const pw=Number(s.txPower);
+ if(!Number.isInteger(pw)||pw<1||pw>22){alert('TX gücü 1 ile 22 arasında tam sayı olmalıdır.');$('txPower').focus();return;}
+ const intervals=['smart7','smart10','smart20','smart49','smart60','smart90'].map(k=>Number(s[k]));
+ if(intervals.some(v=>!Number.isInteger(v)||v<10||v>3600)||intervals[0]<15||intervals.some((v,i)=>i>0&&v>intervals[i-1])){
+   alert('Smart Beacon süreleri 10–3600 saniye olmalı; hız arttıkça süre artmamalı. 0–7 km/sa en az 15 saniye.');return;
+ }
+ if(firmwareMode==='direct'){
+    if(directStatus!=='ACTIVE'){alert('Direct Flash henüz ACTIVE değil; kayıt yapılmayacak.');return;}
+    if(!sawOledSettings && s.oledSleep!==deviceSnapshot.oledSleep){alert('Bu SX1268 firmware OLED süresini bildirmiyor. V0.9.14 gerekir.');return;}
+  } else if(!sawOledSettings){alert('OLED ayarları okunamadı. Önce cihazı yeniden okutun.');return;}
+ const oledChanged = sawOledSettings && s.oledDriver!==deviceSnapshot.oledDriver;
+ const commands=[...(sawOledSettings?[['oledSleep','sleep '+s.oledSleep]]:[]),['callsign','c '+call],['positionMode','f '+s.positionMode],['fixedMin','i '+s.fixedMin],['wx','x '+s.wx],['statusMin','z '+s.statusMin],['commentMin','j '+s.commentMin],['parkMin','k '+s.parkMin],['symbol','s '+s.symbol],['comment','comment '+cm],['status','status '+st],['auto','a '+s.auto],['txPower','power '+s.txPower]];
+ const smartKeys=['smart7','smart10','smart20','smart49','smart60','smart90'];
+ if(smartKeys.some(k=>s[k]!==deviceSnapshot[k])) commands.push(['smartIntervals','smart '+intervals.join(',')]);
+ if(s.smartMotion!==deviceSnapshot.smartMotion) commands.push(['smartMotion','motion '+s.smartMotion]);
+ if(s.beaconBattery!==deviceSnapshot.beaconBattery) commands.push(['beaconBattery','batt '+s.beaconBattery]);
+ const changed=commands.filter(([key])=> key==='smartIntervals'||s[key]!==deviceSnapshot[key]);
+ if(!changed.length && !oledChanged){note('[YAZMA] Değişen ayar yok. Flash yazılmadı.');return;}
+ if(!confirm('OLED dahil toplam '+(changed.length+(oledChanged?1:0))+' değişiklik kalıcı kaydedilecek. Devam?'))return;
+ $('saveBtn').disabled=true;let count=0;
+ try{
+  // Tek Kaydet: OLED surucusunu deneme + onay komutlariyla otomatik kalici kaydet.
+  // Bu akista kullanicinin ayri 20 saniyelik butonlara basmasi gerekmez.
+  if(oledChanged){
+    oledSaveResult='';
+    note('[OLED] Secilen '+s.oledDriver.toUpperCase()+' tipi kalici kaydediliyor...');
+    // Onizleme + onay tek USB yazisinda: 20 saniyelik zaman asimina takilmaz.
+    await queueOledAndConfirm(s.oledDriver);
+    for(let tries=0;tries<40 && !oledSaveResult;tries++) await delay(150);
+    if(oledSaveResult!=='ok') throw Error('OLED kalici kaydi dogrulanamadi; diger ayarlar yazilmadi. Konsolu kontrol edin.');
+    note('[OLED] Surucu tipi kalici kaydedildi: '+s.oledDriver.toUpperCase());
+    count++;
+  }
+  for(const [key,cmd] of changed){await queue(cmd);count++;await delay(1100);}
+   if(firmwareMode==='direct'){await queue('flash?');await delay(260);}
+   await queue('p');
+   note('[YAZMA] '+count+' komut iletildi. Başarılı kayıt için cihazın [DIRECT] SAVED yanıtını ve yeniden başlatma sonrası değerleri doğrulayın.');
+ }catch(e){note('[HATA] '+count+' komuttan sonra durdu: '+e.message);}
+ finally{if(port)$('saveBtn').disabled=false;}
+};
+if(!('serial'in navigator))$('browserNotice').textContent='Bu tarayıcıda USB seri bağlantısı yok; Bluetooth panelini Android Chrome ile HTTPS üzerinde kullanabilirsiniz. USB ayarları için masaüstü Chrome/Edge gerekir.';
+
+// Web Bluetooth Nordic UART Service (NUS), V0.9.18 read-only + V0.9.20 config.
+// USB port, config formu ve USB kaydetme protokolunden tamamen bagimsizdir.
+const BLE_NUS_SERVICE='6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+const BLE_NUS_RX='6e400002-b5a3-f393-e0a9-e50e24dcca9e'; // browser -> tracker (WRITE)
+const BLE_NUS_TX='6e400003-b5a3-f393-e0a9-e50e24dcca9e'; // tracker -> browser (NOTIFY)
+let bleDevice=null, bleServer=null, bleWriteChar=null, bleNotifyChar=null;
+let bleTextPending='', bleCommandChain=Promise.resolve();
+function bleNote(line){
+  const e=$('bleLog'); e.textContent+=(e.textContent?'\n':'')+line;
+  if(e.textContent.length>12000)e.textContent=e.textContent.slice(-9000);
+  e.scrollTop=e.scrollHeight;
+}
+function bleSetConnection(connected,message){
+  $('bleConnectBtn').disabled=connected;
+  for(const id of ['bleDisconnectBtn','bleInfoBtn','blePingBtn','bleCfgReadBtn','bleLockBtn'])$(id).disabled=!connected;
+  if(!connected)bleSetLockClosed();
+  $('blePin').disabled=!connected;
+  bleUpdateLockButtons();
+  $('bleState').textContent=connected?'● BLE bağlı':'● BLE bağlı değil';
+  $('bleState').classList.toggle('online',connected);
+  $('bleHelp').textContent=message||(connected?'Her 10 saniyede bir otomatik INFO verisi gelir.':'Bağlantı yok.');
+  $('bleHelp').classList.toggle('good',connected);
+}
+function bleLine(line){
+  const msg=line.trim(); if(!msg)return;
+  bleNote('← '+msg);
+  bleHandleResponse(msg);
+  let m=msg.match(/^INFO\|([^|]+)\|(SX1262|SX1268)\|GPS=([01])\|SAT=(\d+)\|RF=(OK|ERR)\|BAT=(\d+(?:\.\d+)?)$/);
+  if(m){
+    $('bleCall').textContent=m[1]; $('bleChip').textContent=m[2];
+    $('bleGps').textContent=m[3]==='1'?'Fix var':'Fix yok';
+    $('bleSat').textContent=m[4]; $('bleRf').textContent=m[5]==='OK'?'Hazır':'Hata';
+    $('bleBat').textContent=m[6]+' V';
+    $('bleLast').textContent=new Date().toLocaleTimeString('tr-TR');
+  }else if(/^PONG\|TA1FM\|/.test(msg)){
+    $('bleTest').textContent='Başarılı ✓';
+    $('bleHelp').textContent='PING/PONG testi başarılı — '+msg;
+  }else if(msg.startsWith('ERR|')){
+    $('bleTest').textContent='Hata'; $('bleHelp').textContent=msg;
+  }
+}
+function bleOnValue(event){
+  const v=event.target.value;
+  // UART mesaji 18 baytlik BLE bildirimlerine bolunur. Satir sonuna kadar birlestir.
+  const raw=new Uint8Array(v.buffer,v.byteOffset,v.byteLength);
+  bleTextPending+=new TextDecoder().decode(raw);
+  const lines=bleTextPending.split(/\r\n|\n|\r/);
+  bleTextPending=lines.pop()||'';
+  for(const line of lines)bleLine(line);
+  if(bleTextPending.length>1024){bleNote('[UYARI] Eksik BLE satiri sifirlandi');bleTextPending='';}
+}
+function bleOnDisconnected(){
+  bleWriteChar=null; bleNotifyChar=null; bleServer=null; bleTextPending='';
+  bleDeviceSnapshot=null; bleCfgCollect=null;
+  bleSetLockClosed();
+  bleRejectWaiters('Bağlantı kesildi');
+  bleSetConnection(false,'Cihaz bağlantıyı kesti. Yeniden bağlanabilirsiniz.');
+  bleNote('[BLE] Bağlantı kesildi');
+}
+async function bleSend(command){
+  if(!bleWriteChar||!bleServer?.connected)throw Error('Bluetooth bağlı değil.');
+  // NUS varsayilan ATT MTU ile tam uyum icin komutlar 18-bayt parcali yazilir.
+  const payload=new TextEncoder().encode(command+'\n');
+  const send=async()=>{
+    for(let pos=0;pos<payload.length;pos+=18){
+      const part=payload.slice(pos,pos+18);
+      if(bleWriteChar.properties.writeWithResponse && bleWriteChar.writeValueWithResponse){
+        await bleWriteChar.writeValueWithResponse(part);
+      }else if(bleWriteChar.properties.writeWithoutResponse && bleWriteChar.writeValueWithoutResponse){
+        await bleWriteChar.writeValueWithoutResponse(part);
+      }else{
+        await bleWriteChar.writeValue(part);
+      }
+      if(pos+18<payload.length) await new Promise(r=>setTimeout(r,55));
+    }
+    bleNote('→ '+(command.startsWith('cfg unlock ')?'cfg unlock ****':command));
+  };
+  bleCommandChain=bleCommandChain.catch(()=>{}).then(send);
+  return bleCommandChain;
+}
+$('bleConnectBtn').onclick=async()=>{
+  if(!window.isSecureContext){
+    $('bleHelp').textContent='Bluetooth için sayfayı HTTPS GitHub Pages adresinden açın.';return;
+  }
+  if(!navigator.bluetooth){
+    $('bleHelp').textContent='Bu tarayıcı Web Bluetooth desteklemiyor. Android Chrome ile HTTPS üzerinden açın.';return;
+  }
+  try{
+    // Cihaz secme penceresi dogrudan kullanici tiklamasi ile acilir.
+    const dev=await navigator.bluetooth.requestDevice({
+      filters:[{name:'TA1FM-Tracker'},{services:[BLE_NUS_SERVICE]}],
+      optionalServices:[BLE_NUS_SERVICE]
+    });
+    bleDevice=dev;
+    bleDevice.addEventListener('gattserverdisconnected',bleOnDisconnected);
+    $('bleHelp').textContent='Bluetooth servisine bağlanılıyor…';
+    bleServer=await bleDevice.gatt.connect();
+    const service=await bleServer.getPrimaryService(BLE_NUS_SERVICE);
+    bleNotifyChar=await service.getCharacteristic(BLE_NUS_TX);
+    bleWriteChar=await service.getCharacteristic(BLE_NUS_RX);
+    bleNotifyChar.addEventListener('characteristicvaluechanged',bleOnValue);
+    await bleNotifyChar.startNotifications();
+    bleTextPending='';
+    bleSetConnection(true,'Bağlandı. Durum bilgisi bekleniyor…');
+    bleNote('[BLE] '+(dev.name||'TA1FM-Tracker')+' baglandi; TX NOTIFY acik');
+    await bleSend('info');
+    await bleSend('cfg lock?');
+  }catch(e){
+    bleNote('[BLE HATA] '+e.message);
+    if(bleServer?.connected){try{bleServer.disconnect();}catch{}}
+    bleSetConnection(false,'Bluetooth bağlantısı kurulamadı: '+e.message);
+  }
+};
+$('bleDisconnectBtn').onclick=()=>{
+  if(bleServer?.connected)bleServer.disconnect();
+  else bleOnDisconnected();
+};
+$('bleInfoBtn').onclick=()=>bleSend('info').catch(e=>bleNote('[BLE HATA] '+e.message));
+$('blePingBtn').onclick=()=>{
+  $('bleTest').textContent='Bekleniyor…';
+  bleSend('ping').catch(e=>{bleNote('[BLE HATA] '+e.message);$('bleTest').textContent='Hata';});
+};
+
+
+// BLE ayarlar (V0.9.20): USB kaydetme akisi ve USB deviceSnapshot etkilenmez.
+let bleDeviceSnapshot=null;
+let bleCfgCollect=null;
+let bleWaiters=[];
+let bleSaveBusy=false;
+let bleLockOpen=false;
+let bleLockDeadline=0;
+function bleSetLockClosed(){
+  bleLockOpen=false;bleLockDeadline=0;
+  $('bleLockStatus').textContent='🔒 Kilitli';
+  $('bleLockStatus').classList.remove('open');
+  bleUpdateLockButtons();
+}
+function bleSetLockOpen(seconds){
+  const ttl=Math.max(1,Math.min(180,Number(seconds)||180));
+  bleLockOpen=true;bleLockDeadline=Date.now()+ttl*1000;
+  bleUpdateLockButtons();
+}
+function bleUpdateLockButtons(){
+  const connected=!!bleServer?.connected;
+  const remaining=bleLockOpen?Math.max(0,Math.ceil((bleLockDeadline-Date.now())/1000)):0;
+  if(bleLockOpen&&remaining<=0){
+    bleLockOpen=false;bleLockDeadline=0;
+    $('bleCfgState').textContent='🔒 Üç dakikalık yazma izni doldu. Kilidi tekrar açın.';
+  }
+  $('bleLockStatus').textContent=bleLockOpen?'🔓 Açık • '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):'🔒 Kilitli';
+  $('bleLockStatus').classList.toggle('open',bleLockOpen);
+  $('bleUnlockBtn').disabled=!connected||bleSaveBusy;
+  $('bleCloseLockBtn').disabled=!connected||!bleLockOpen||bleSaveBusy;
+  $('bleCfgSaveBtn').disabled=!connected||!bleLockOpen||!bleDeviceSnapshot||bleSaveBusy;
+}
+// Gorunen sure bir gostergedir; asil izin firmware tarafinda kontrol edilir.
+setInterval(bleUpdateLockButtons,1000);
+const bleEditableKeys=['callsign','auto','positionMode','fixedMin','symbol','wx',
+ 'statusMin','commentMin','parkMin','comment','status','txPower','smartMotion',
+ 'beaconBattery','oledSleep'];
+function bleRejectWaiters(msg){
+ for(const w of bleWaiters.splice(0)){clearTimeout(w.timer);w.reject(Error(msg));}
+}
+function bleWait(prefix,ms=13000){
+ return new Promise((resolve,reject)=>{
+   const w={prefix,resolve,reject,timer:null};
+   w.timer=setTimeout(()=>{bleWaiters=bleWaiters.filter(v=>v!==w);reject(Error('Cevap zaman aşımı: '+prefix));},ms);
+   bleWaiters.push(w);
+ });
+}
+function bleResolveWaiters(line){
+ if(line.startsWith('ERR|')) {
+   bleRejectWaiters(line); return;
+ }
+ const hits=bleWaiters.filter(w=>line.startsWith(w.prefix));
+ bleWaiters=bleWaiters.filter(w=>!hits.includes(w));
+ for(const w of hits){clearTimeout(w.timer);w.resolve(line);}
+}
+function bleReadForm(data){
+ const v={};
+ for(const k of bleEditableKeys){if(Object.hasOwn(data,k))v[k]=data[k];}
+ if(data.smart){const a=data.smart.split(',');if(a.length===6){
+   ['smart7','smart10','smart20','smart49','smart60','smart90'].forEach((k,i)=>v[k]=a[i]);
+ }}
+ for(const k of ['wx','statusMin','commentMin'])if(v[k]==='0')v[k]='off';
+ if(data.symbol){
+  const symbols={'/>':'car','/[':'walker','/-':'house'};
+  if(symbols[data.symbol])v.symbol=symbols[data.symbol];
+  else {
+   // APK custom symbols are kept as a temporary selectable entry; BLE preserves them.
+   let opt=[...$('symbol').options].find(o=>o.dataset.customSymbol==='1');
+   if(!opt){opt=document.createElement('option');opt.dataset.customSymbol='1';$('symbol').appendChild(opt);}
+   opt.value=data.symbol; opt.textContent='APRS özel sembol: '+data.symbol;
+   v.symbol=data.symbol;
+  }
+ }
+ applySnapshot(v);
+ const snap=snapshot();
+ // Bir BLE okuma USB'nin eski karsilastirma fotografini gecersiz kilar.
+ // USB'den tekrar yazmadan once USB Cihazdan Oku zorunlu olur.
+ deviceSnapshot=null;
+ bleDeviceSnapshot={...snap};
+ bleDeviceSnapshot.chip=data.chip; bleDeviceSnapshot.seq=data.seq;
+ $('bleCfgState').textContent='✓ BLE ayarları okundu: '+data.callsign+' / '+data.chip+' / Direct Flash '+data.direct+' / seq='+data.seq;
+ bleUpdateLockButtons();
+}
+function bleHandleResponse(line){
+ if(line==='CFG|BEGIN|V0.9.20'){
+   bleCfgCollect={};
+   $('bleCfgState').textContent='Bluetooth üzerinden ayarlar alınıyor…';
+ }else if(line==='CFG|END' && bleCfgCollect){
+   const data=bleCfgCollect;bleCfgCollect=null;
+   const required=['callsign','chip','direct','seq','comment','status','smart','oledDriver','oledSleep','txPower'];
+   if(required.some(k=>!(k in data))){
+     $('bleCfgState').textContent='⚠ BLE ayar cevabı eksik; tekrar oku.';
+   }else if(data.direct!=='ACTIVE'){
+     $('bleCfgState').textContent='⚠ Direct Flash ACTIVE değil, yazma kapalı.';
+     bleDeviceSnapshot=null;bleUpdateLockButtons();
+   }else bleReadForm(data);
+ }else if(line.startsWith('CFG|') && bleCfgCollect){
+   const payload=line.slice(4),at=payload.indexOf('=');
+   if(at>0)bleCfgCollect[payload.slice(0,at)]=payload.slice(at+1);
+ }else if(/^LOCK\|OPEN(?:\|\d+)?$/.test(line)){
+   const seconds=line.split('|')[2]||'180';
+   bleSetLockOpen(seconds);
+   $('bleCfgState').textContent='🔓 Yazma izni açık. En fazla 3 dakika içinde Kaydet kullanabilirsiniz.';
+ }else if(line==='LOCK|CLOSED'){
+   bleSetLockClosed();
+   $('bleCfgState').textContent='🔒 Yazma kilidi kapalı.';
+ }else if(line.startsWith('ACK|SAVE|')){
+   bleSetLockClosed();
+   $('bleCfgState').textContent='✓ Tek Direct Flash kaydı başarılı: '+line;
+ }else if(line.startsWith('ERR|')){
+   $('bleCfgState').textContent='⚠ '+line;
+ }
+ bleResolveWaiters(line);
+}
+function bleCheckForm(s){
+ const call=s.callsign.trim().toUpperCase();
+ if(!/^[A-Z0-9]{3,6}(?:-(?:[0-9]|1[0-5]))?$/.test(call)||call==='NOCALL')throw Error('Çağrı işareti hatalı.');
+ s.callsign=call;
+ for(const k of ['comment','status']){
+  s[k]=s[k].trim();
+  if(!s[k]||s[k].length>62||!/^[\x20-\x7E]+$/.test(s[k])||/[|~]/.test(s[k]))throw Error(k+' için 1–62 ASCII karakter; | ve ~ yasak.');
+ }
+ const p=Number(s.txPower);if(!Number.isInteger(p)||p<1||p>22)throw Error('TX Power 1–22 olmalı.');
+ const v=['smart7','smart10','smart20','smart49','smart60','smart90'].map(k=>Number(s[k]));
+ if(v.some(n=>!Number.isInteger(n)||n<10||n>3600)||v[0]<15||v.some((n,i)=>i>0&&n>v[i-1]))
+   throw Error('Smart süreleri 10–3600 saniye aralığında ve azalan olmalı.');
+ if(!['car','walker','house'].includes(s.symbol) && !/^[\\/][!-~]$/.test(s.symbol))
+   throw Error('APRS sembolü geçersiz.');
+ return s;
+}
+async function bleReadSettings(){
+ if(bleSaveBusy)throw Error('Kaydetme sürüyor.');
+ bleDeviceSnapshot=null;bleCfgCollect=null;
+ bleUpdateLockButtons();
+ $('bleCfgState').textContent='BLE ayarları isteniyor…';
+ const done=bleWait('CFG|END',18000);
+ await bleSend('cfg?');await done;
+ if(!bleDeviceSnapshot)throw Error('Ayar cevabı tam değil. V0.9.20 yüklü mü?');
+}
+$('bleCfgReadBtn').onclick=()=>bleReadSettings().catch(e=>{
+ $('bleCfgState').textContent='⚠ '+e.message;bleNote('[BLE CFG HATA] '+e.message);
+});
+$('bleLockBtn').onclick=()=>bleSend('cfg lock?').catch(e=>bleNote('[BLE HATA] '+e.message));
+$('bleUnlockBtn').onclick=async()=>{
+ const pin=$('blePin').value.trim();
+ if(!/^\d{4,8}$/.test(pin)){
+  $('bleCfgState').textContent='⚠ PIN 4–8 rakam olmalıdır.';return;
+ }
+ try{
+  const unlocked=bleWait('LOCK|OPEN|',13000);
+  await bleSend('cfg unlock '+pin);
+  $('blePin').value='';
+  await unlocked;
+ }catch(e){
+  $('blePin').value='';
+  bleSetLockClosed();
+  $('bleCfgState').textContent='⚠ Kilit açılamadı: '+e.message;
+ }
+};
+$('bleCloseLockBtn').onclick=async()=>{
+ try{const locked=bleWait('LOCK|CLOSED',12000);await bleSend('cfg lock');await locked;}
+ catch(e){$('bleCfgState').textContent='⚠ Kilit kapatma yanıtı alınamadı: '+e.message;}
+};
+$('bleCfgSaveBtn').onclick=async()=>{
+ if(bleSaveBusy)return;
+ try{
+  if(!bleServer?.connected||!bleDeviceSnapshot)throw Error('Önce BLE Ayarları Oku ile cihaza ait ayarları yükleyin.');
+  if(!bleLockOpen)throw Error('Önce yazma kilidini PIN ile açın.');
+  const s=bleCheckForm(snapshot()), old=bleDeviceSnapshot;
+  if(s.oledDriver!==old.oledDriver)throw Error('OLED sürücü değişimi güvenlik için yalnızca USB üzerinden yapılabilir.');
+  const cmd=[];
+  for(const k of bleEditableKeys)if(s[k]!==old[k])cmd.push([k,s[k]]);
+  const speed=['smart7','smart10','smart20','smart49','smart60','smart90'];
+  if(speed.some(k=>s[k]!==old[k]))cmd.push(['smart',speed.map(k=>s[k]).join(',')]);
+  if(!cmd.length){$('bleCfgState').textContent='Değişiklik yok; flash yazılmadı.';return;}
+  if(!confirm(cmd.length+' değişiklik TEK Direct Flash kaydıyla uygulanacak. Devam edilsin mi?'))return;
+  bleSaveBusy=true;bleUpdateLockButtons();
+  $('bleCfgState').textContent='Değişiklikler RAM taslağına hazırlanıyor…';
+  const begun=bleWait('ACK|BEGIN|READY');await bleSend('cfg begin');await begun;
+  for(let i=0;i<cmd.length;i++){
+    const [key,val]=cmd[i];
+    const ack=bleWait('ACK|'+key+'|STAGED');
+    await bleSend('set '+key+' '+val);await ack;
+    $('bleCfgState').textContent='RAM taslağı: '+(i+1)+'/'+cmd.length+' değişiklik hazır.';
+  }
+  const saved=bleWait('ACK|SAVE|',18000);
+  await bleSend('cfg save');await saved;
+  $('bleCfgState').textContent='✓ Direct Flash tek kayıt başarılı. Ayarlar tekrar okunuyor…';
+  bleSaveBusy=false;
+  await bleReadSettings();
+ }catch(e){
+   $('bleCfgState').textContent='⚠ Kayıt tamamlanmadı: '+e.message;
+   bleNote('[BLE YAZMA HATA] '+e.message);
+   if(bleServer?.connected)bleSend('cfg cancel').catch(()=>{});
+ }finally{
+   bleSaveBusy=false;
+   bleUpdateLockButtons();
+ }
+};
+
+</script></body></html>
