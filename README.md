@@ -2,6 +2,8 @@
 
 **Güncel panel / Current panel: V0.9.22**
 
+**🧪 V0.9.23 BETA USB/BLE paneli:** [beta_v0_9_23.html](beta_v0_9_23.html) · [BETA firmware ve test notları](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker/blob/main/V0_9_23_BETA_TEST_NOTLARI.md). **index.html değiştirilmedi; varsayılan kararlı panel V0.9.22 olarak kalır.**
+
 **[Web panelini aç / Open the web configurator](https://ta1fm.github.io/TA1FM-nrf52-Aprs-Tracker-Configurator/)**
 
 Bu GitHub Pages projesindeki **`index.html`** güncel **V0.9.22 USB + BLE** panelidir. Aynı arayüz USB ve Bluetooth üzerinden cihaz ayarlarını okuyup yazmayı destekler. **`ble.html`** dosyası önceki sürümlerden kalan ayrı bağlantıdır; **güncel kullanım için ana sayfa** önerilir.
