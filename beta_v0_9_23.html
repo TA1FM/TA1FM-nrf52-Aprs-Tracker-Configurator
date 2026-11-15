@@ -112,7 +112,7 @@
 <div class="field"><label for="beaconBattery">Konum beacon'ında pil voltajı</label><select id="beaconBattery"><option value="on" selected>Açık</option><option value="off">Kapalı</option></select></div></div>
 <p class="hint">Bu seçenekler SMART modunda ve AUTO açıkken etkilidir. Pil voltajı konum yorumuna eklenir; bağımsız RF paketi gönderilmez. Süreler hız arttıkça büyümemelidir.</p></section>
 <section class="card"><h2>📊 Canlı cihaz bilgileri</h2><div class="meta"><div>Firmware / Hafıza: <strong id="firmwareMode">Henüz tanınmadı</strong></div><div>GPS: <strong id="liveGps">—</strong></div><div>LoRa: <strong id="liveLora">—</strong></div><div>TX: <strong id="liveTx">—</strong></div><div>WX TX: <strong id="liveWxTx">—</strong></div><div>Son RX: <strong id="liveRx">—</strong></div></div><p class="hint">Seri Monitör ile bu panel aynı COM portunu aynı anda kullanamaz. Bağlanmadan önce Arduino Seri Monitör'ü kapatın.</p><div class="actions"><button id="posBtn" class="secondary" disabled>📍 Manuel konum TX (t)</button><button id="wxBtn" class="secondary" disabled>🌦 Manuel WX TX (w)</button><button id="statusBtn" class="secondary" disabled>📡 Manuel Status TX (v)</button></div><p class="hint">Manuel TX düğmeleri gerçekten RF yayını tetikler; yalnızca test amacıyla kullanın.</p></section>
-<section class="card wide"><h2>⌨️ Seri Monitör <small style="font-size:12px;font-weight:400;color:var(--muted)">115200 baud</small></h2><pre id="log" aria-live="polite">TA1FM ayar paneli hazır. Cihaza bağlanmak için üstteki düğmeye basın.</pre><div class="frow" style="align-items:end"><div class="field" style="flex:1"><label for="manualCmd">Elle komut gönder</label><input id="manualCmd" placeholder="p, comment?, status? ..." spellcheck="false"></div><button id="sendBtn" class="secondary" disabled>Gönder</button><button id="clearBtn" class="secondary">Log temizle</button></div></section>
+<section class="card wide"><h2>⌨️ Seri Monitör <small style="font-size:12px;font-weight:400;color:var(--muted)">115200 baud</small></h2><pre id="log" aria-live="polite"></pre><div class="frow" style="align-items:end"><div class="field" style="flex:1"><label for="manualCmd">Elle komut gönder</label><input id="manualCmd" placeholder="p, comment?, status? ..." spellcheck="false"></div><button id="sendBtn" class="secondary" disabled>Gönder</button><button id="clearBtn" class="secondary">Log temizle</button><button id="downloadLogBtn" class="secondary" type="button">⬇ Seri logu indir (TXT)</button></div><p class="hint">Zaman damgaları bilgisayarın yerel saatine göre, satırın web paneline ulaştığı anda eklenir. Cihaz yazılımını etkilemez. Uzun kayıtlar için bu sayfayı açık tutun; en yeni yaklaşık 1,5 MB kayıt saklanır.</p></section>
 </div><p class="foot">TA1FM nrf52 Tracker • Web Panel BLE+DIGI CONFIG v1.6 • USB ve V0.9.23 BLE ayar yönetimi • GitHub Pages • Yerel çalışır; seri port verileri hiçbir sunucuya gönderilmez. JSON yedeği yalnızca ayarlarınızı içerir.</p>
 </main>
 <script>
@@ -123,7 +123,31 @@ let firmwareMode='unknown', directStatus='unknown', directSequence=null, waiting
 let readRequestActive=false, oledSaveResult='',usbDetectedChip='UNIVERSAL',sawV23Settings=false;
 function readFeedback(message,kind=''){const el=$('readState');el.textContent=message;el.className='read-state'+(kind?' '+kind:'');}
 function startReadFeedback(){readRequestActive=true;readFeedback('⏳ Cihaz okunuyor…','busy');note('[OKUMA] Cihazdan ayar istemi gönderiliyor.');}
-function note(s){const pre=$('log');pre.textContent+=(pre.textContent?'\n':'')+s; if(pre.textContent.length>55000)pre.textContent=pre.textContent.slice(-45000);pre.scrollTop=pre.scrollHeight;}
+// Sadece web panelinde yerel tarih/saat damgasi. Firmware'in seri protokolune dokunmaz.
+const LOG_MAX_CHARS=1500000,LOG_KEEP_CHARS=1200000;
+let logCharCount=0;
+function localLogTimestamp(){
+  const d=new Date(),pad=(n,width=2)=>String(n).padStart(width,'0');
+  return '['+d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '
+    +pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())
+    +'.'+pad(d.getMilliseconds(),3)+']';
+}
+function note(s){
+  const pre=$('log');
+  const stamped=String(s).split(/\r\n|\n|\r/).map(line=>localLogTimestamp()+' '+line).join('\n');
+  const chunk=(logCharCount?'\n':'')+stamped;
+  pre.append(document.createTextNode(chunk));
+  logCharCount+=chunk.length;
+  if(logCharCount>LOG_MAX_CHARS){
+    let kept=pre.textContent.slice(-LOG_KEEP_CHARS);
+    const firstNewline=kept.indexOf('\n');
+    if(firstNewline>=0)kept=kept.slice(firstNewline+1);
+    pre.textContent=kept;
+    logCharCount=kept.length;
+  }
+  pre.scrollTop=pre.scrollHeight;
+}
+note('TA1FM ayar paneli hazır. Cihaza bağlanmak için üstteki düğmeye basın.');
 function setOledButtons(){
   const connected=!!port;
   const direct=(firmwareMode==='direct');
@@ -243,7 +267,20 @@ $('readBtn').onclick=async()=>{
 };
 $('sendBtn').onclick=()=>{const c=$('manualCmd').value.trim();if(c){queue(c).catch(e=>note('[HATA] '+e.message));$('manualCmd').value='';}};
 $('manualCmd').addEventListener('keydown',e=>{if(e.key==='Enter')$('sendBtn').click();});
-$('clearBtn').onclick=()=>$('log').textContent='';
+$('clearBtn').onclick=()=>{$('log').textContent='';logCharCount=0;};
+$('downloadLogBtn').onclick=()=>{
+  const content=$('log').textContent;
+  if(!content.trim()){alert('İndirilecek seri kaydı yok.');return;}
+  const d=new Date(),pad=n=>String(n).padStart(2,'0');
+  const suffix=d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'_'
+    +pad(d.getHours())+pad(d.getMinutes())+pad(d.getSeconds());
+  const blob=new Blob(['\uFEFF',content,'\n'],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='TA1FM_Seri_Log_'+suffix+'.txt';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  note('[LOG] Seri kaydı TXT olarak indirildi.');
+};
 $('posBtn').onclick=()=>{if(confirm('Gerçek RF konum paketi gönderilsin mi?'))queue('t').catch(e=>note('[HATA] '+e.message));};
 $('wxBtn').onclick=()=>{if(confirm('Gerçek RF WX paketi gönderilsin mi?'))queue('w').catch(e=>note('[HATA] '+e.message));};
 $('statusBtn').onclick=()=>{if(confirm('Gerçek RF Status paketi gönderilsin mi?'))queue('v').catch(e=>note('[HATA] '+e.message));};
