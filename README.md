@@ -1,47 +1,51 @@
-# TA1FM nrf52 Tracker — USB + BLE Web Configurator
+# TA1FM nrf52 Tracker — USB + BLE Control Panel
 
-**Güncel panel / Current panel: V0.9.22**
+## ✅ Güncel ana panel / Current control panel
 
-**🧪 V0.9.23 BETA USB/BLE paneli:** [beta_v0_9_23.html](beta_v0_9_23.html) · [BETA firmware ve test notları](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker/blob/main/V0_9_23_BETA_TEST_NOTLARI.md). **index.html değiştirilmedi; varsayılan kararlı panel V0.9.22 olarak kalır.**
+**[🌐 TA1FM Tracker Control Panel — Aç / Open](https://ta1fm.github.io/TA1FM-nrf52-Aprs-Tracker-Configurator/)**
 
-**[Web panelini aç / Open the web configurator](https://ta1fm.github.io/TA1FM-nrf52-Aprs-Tracker-Configurator/)**
+**Ana HTML:** [TA1FM_Tracker_Control_Panel.html](./TA1FM_Tracker_Control_Panel.html) · **index.html** bu dosyaya yönlendirir.
 
-Bu GitHub Pages projesindeki **`index.html`** güncel **V0.9.22 USB + BLE** panelidir. Aynı arayüz USB ve Bluetooth üzerinden cihaz ayarlarını okuyup yazmayı destekler. **`ble.html`** dosyası önceki sürümlerden kalan ayrı bağlantıdır; **güncel kullanım için ana sayfa** önerilir.
+Bu panel, **TA1FM nrf52 Tracker v1.0.0 STABLE** ile kullanılan **BETA-7 tabanlı USB + BLE sekmeli arayüzdür**. Ana sayfa artık eski v0.9.22 paneli değildir.
 
-## USB üzerinden kullanım
+**[🚀 v1.0.0 STABLE firmware ve indirmeler](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker/releases/tag/v1.0.0)** · [Firmware deposu](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker)
 
-1. Bilgisayarda **Chrome veya Edge** açın.
-2. Tracker'ı USB veri kablosuyla bağlayın. Arduino Seri Monitör/başka uygulamanın aynı COM portunu kullanmadığından emin olun.
-3. **Cihaza bağlan → Cihazdan oku (p)** ile gerçek ayarları alın.
-4. Ayarları düzenleyip **Ayarları cihaza yaz** seçin; başarı mesajını ve yeniden okuma sonucunu doğrulayın.
+## Panel sekmeleri
 
-## Bluetooth BLE üzerinden kullanım
+- **Mesajlar:** USB veya BLE üzerinden APRS mesaj gönderme/alma, gelen kutusu ve ACK takibi; 1/2/3 toplam RF denemesi seçimi.
+- **Canlı:** GPS, RF, pil, son duyulan istasyon, sayaçlar ve BLE canlı durum.
+- **Ayarlar:** Cihaz yapılandırması, SMART Beacon, LoRa seçimi, OLED ve JSON ayar yedeği.
+- **Kayıtlar:** USB seri kayıtları; BLE haberleşme kayıtları Canlı bölümünde.
 
-1. Android Chrome'da sayfayı **HTTPS** ile açın; Bluetooth'u etkinleştirin.
-2. **Bluetooth ile bağlan** düğmesinden **nRF52_Lora_Tracker** cihazını seçin.
-3. **BLE Ayarları Oku** ile mevcut değerleri alın.
-4. PIN yoktur: **Kaydetme açık** anahtarını açıp **BLE Ayarları Kaydet** kullanın.
-5. Kaydetmeden veya bağlantı koptuktan sonra anahtar kapanır. Bu anahtar güvenlik şifresi değildir; eşleştirmesiz BLE UART güçlü erişim koruması sağlamaz.
+**Not:** Mesajlar yalnızca cihazın RAM'inde tutulur; kapatıp açınca geçmiş silinir. Panelden mesajlaşma özellikleri için **v1.0.0 (V0.9.26 BETA-7 tabanlı)** veya uyumlu firmware kullanın.
 
-## V0.9.22'de desteklenen ayarlar
+## USB ile bağlantı
 
-- Çağrı işareti, AUTO, SMART/FIXED ve altı Smart Beacon zaman aralığı
-- WX/Status/Comment periyotları ve metinleri
-- Ayrı hareket/park iki karakterli APRS sembolleri (`/>` ve `\P` örnekleri)
-- SX1262/SX1268 LoRa çip seçimi (**değişiklikten sonra cihazı yeniden başlatın**)
-- SH1106/SSD1306 OLED sürücüsü, ekran zamanlayıcısı
-- RF çıkış hedefi (1–22 dBm), pil voltajı, ilk hareket konum isteği
-- JSON ayar yedeği ve geri yükleme (geri yükleme yalnızca formu doldurur; cihaza ayrıca kaydedin)
+1. Bilgisayarda USB Web Serial destekleyen **Chrome veya Edge** açın ve cihazı veri kablosuyla bağlayın.
+2. Arduino IDE Seri Monitör gibi aynı COM portunu kullanan uygulamaları kapatın.
+3. **USB ile bağlan** işlemini yapıp ayarları cihazdan okuyun. Değişiklikleri göndermeden önce doğru cihazın bağlı olduğundan emin olun.
+4. Mesajlar sekmesinde iletişim için **USB** bağlantısını seçin.
 
-**OLED notu:** BLE ile sürücü seçimi 20 saniye önizleme olmadan kalıcı kaydedilir; yanlış seçimde açılışta **3 saniye menü tuşuyla** ekran kurtarma kullanılabilir. USB tarafında önceki önizleme/onay yolu korunur.
+## Bluetooth BLE ile bağlantı
 
-**RF notu:** V0.9.22 firmware ardışık LoRa RF paketleri arasında **minimum 15 saniye** koruma uygular. Comment konum paketine eklenir; Status ayrı pakettir.
+1. Bluetooth açıkken, BLE erişimi destekleyen tarayıcıda paneli **HTTPS** üzerinden açın.
+2. **nRF52_Lora_Tracker** cihazını seçerek BLE bağlantısı kurun.
+3. Canlı bilgileri veya ayarları okuyun; Mesajlar bölümünde iletişim için **BLE** bağlantısını seçin.
+4. Ayar kaydetmek gerektiğinde **Kaydetme Açık** anahtarını kullanın. Bu bir parola/güvenlik önlemi değildir.
 
-## Kaynak kodu ve kullanım kılavuzu
+## Önceki paneller / Archive
 
-- **[Tracker firmware V0.9.22 — UF2 + INO](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker)**
-- [Türkçe kullanım kılavuzu](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker/blob/main/KULLANIM_TR.md)
-- [Türkçe kurulum](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker/blob/main/KURULUM_TR.md)
-- [English user guide](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker/blob/main/USER_GUIDE_EN.md)
+- [BETA-7 sekmeli panel kopyası](./BETA/TA1FM_Tracker_Panel_BETA7_Sekmeli_USB_BLE.html)
+- [BETA-7 panel notları](./BETA/README_BETA7_SEKMELI_TR.md)
+- [v0.9.23 eski panel](./beta_v0_9_23.html)
+- [v0.9.22 ve daha eski BLE panel dosyaları](./ble.html)
 
-**73 de TA1FM**
+Eski paneller arşiv amaçlı korunur. Güncel kullanım için **ana bağlantıyı** kullanın.
+
+## Dokümantasyon
+
+- [Türkçe kurulum](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker/blob/main/KURULUM_TR.md) *(eski sürüm ayrıntıları içerebilir)*
+- [Türkçe kullanım](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker/blob/main/KULLANIM_TR.md) *(eski sürüm ayrıntıları içerebilir)*
+- [English user guide](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker/blob/main/USER_GUIDE_EN.md) *(may describe older versions)*
+
+**73 de TA1FM** 📡
