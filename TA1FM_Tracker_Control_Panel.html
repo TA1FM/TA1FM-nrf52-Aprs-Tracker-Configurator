@@ -418,8 +418,8 @@ function bleNote(line){
 function updateSettingsBleStatus(){
  const el=$('settingsBleStatus');if(!el)return;
  if(!bleServer?.connected){el.textContent='📶 BLE bağlı değil. Üstteki BLE Bağlan düğmesini kullanın.';el.className='notice';}
- else if(bleDeviceSnapshot){el.textContent='✅ BLE bağlı • Ayarlar okundu. Alanları düzenleyebilirsiniz. Kaydetmek için Canlı sekmesindeki Kaydetme açık anahtarını kullanın.';el.className='notice';}
- else{el.textContent='📶 BLE bağlı • Ayarlar henüz okunmadı. Canlı sekmesindeki BLE Ayarları Oku düğmesiyle yeniden deneyin.';el.className='notice warning';}
+ else if(bleDeviceSnapshot){el.textContent='✅ BLE bağlı • Ayarlar okundu. Alanları düzenleyebilirsiniz. Kaydetmek için hemen aşağıdaki Kaydetme açık anahtarını kullanın.';el.className='notice';}
+ else{el.textContent='📶 BLE bağlı • Ayarlar henüz okunmadı. Aşağıdaki BLE Ayarları Oku düğmesiyle yeniden deneyin.';el.className='notice warning';}
 }
 function bleSetConnection(connected,message){
   $('bleConnectBtn').disabled=connected;
@@ -970,7 +970,18 @@ function initB7Tabs(){
  main.insertBefore(quick,usbActions);main.insertBefore(nav,usbActions);
  for(const id of ['messages','live','settings','logs'])main.insertBefore(pane[id],usbActions);
  pane.messages.appendChild(msgPanel);pane.live.append(blePanel,liveCard);const settingsBleStatus=document.createElement('div');settingsBleStatus.id='settingsBleStatus';settingsBleStatus.className='notice';settingsBleStatus.setAttribute('role','status');settingsBleStatus.textContent='📶 BLE bağlı değil.';
- pane.settings.append(settingsBleStatus,usbActions,usbNotice,settingsLayout);updateSettingsBleStatus();pane.logs.append(logCard);
+ // BLE read/save buttons and lock are moved, not copied: original handlers stay active.
+ const bleCfgActions=document.createElement('div');bleCfgActions.className='actions';
+ bleCfgActions.append($('bleCfgReadBtn'),$('bleCfgSaveBtn'));
+ const bleSettings=document.createElement('section');
+ bleSettings.className='card wide';bleSettings.setAttribute('aria-label','Bluetooth BLE ayar kaydetme');
+ const bleHeading=document.createElement('h2');bleHeading.textContent='📶 Bluetooth BLE — Ayarları Oku / Kaydet';
+ const bleExplanation=document.createElement('p');bleExplanation.className='hint';
+ bleExplanation.textContent='BLE ile ayarlar otomatik okunur. Alttaki formu değiştirin; Kaydetme açık anahtarını açıp BLE Ayarları Kaydet düğmesini kullanın. USB kayıt düğmesi yalnızca USB içindir.';
+ bleSettings.append(bleHeading,bleExplanation,bleCfgActions,$('bleCfgState'),document.querySelector('.ble-lockbox'));
+ const usbHeading=document.createElement('h2');usbHeading.textContent='🔌 USB Ayar Yönetimi';
+ pane.settings.append(settingsBleStatus,bleSettings,usbHeading,usbActions,usbNotice,settingsLayout);
+ updateSettingsBleStatus();pane.logs.append(logCard);
  $('bleConnectBtn').style.display='none';$('bleDisconnectBtn').style.display='none';
   $('quickBleConnectBtn').onclick=()=>$('bleConnectBtn').click();$('quickBleDisconnectBtn').onclick=()=>$('bleDisconnectBtn').click();
  $('quickUsbConnectBtn').onclick=()=>$('connectBtn').click();$('quickUsbDisconnectBtn').onclick=()=>$('disconnectBtn').click();
