@@ -46,7 +46,7 @@
 </head>
 <body><main>
 <header><div><div class="eyebrow">TA1FM • LORA APRS</div><h1>nrf52 Tracker Ayar Paneli</h1><p>USB ve Bluetooth üzerinden ayar yönetimi • V1.0.0</p></div><div id="connectionState" class="pill">● Bağlantı yok</div></header>
-<div id="browserNotice" class="notice">HTTPS üzerinden açın. USB ayarları için masaüstü Chrome/Edge, Bluetooth canlı takip için Android Chrome kullanın. Bluetooth ve USB farklı bağlantılardır.</div>
+<div id="browserNotice" class="notice">HTTPS üzerinden açın. USB ayarları için masaüstü Chrome/Edge, Bluetooth ayarları ve canlı takip için Android Chrome kullanın. Bluetooth ve USB farklı bağlantılardır.</div>
 <div class="actions"><button id="connectBtn" class="primary">🔌 Cihaza bağlan</button><button id="disconnectBtn" class="secondary" disabled>Bağlantıyı kes</button><button id="readBtn" class="secondary" disabled>↻ Cihazdan oku (p)</button><span id="readState" class="read-state" role="status" aria-live="polite">Cihaz bağlanmadı</span><button id="saveBtn" disabled>⬆ Ayarları cihaza yaz</button><button id="exportBtn" class="secondary">⬇ Ayarları indir (JSON)</button><label class="filebtn">⬆ Yedek dosyası aç<input id="importFile" type="file" accept=".json,application/json"></label></div>
 <div class="notice warning">USB bölümü <strong>SX1262 / SX1268 Direct Flash</strong> firmware komutlarıyla çalışır. V0.9.18 UNIVERSAL BLE cihazlarında da USB bağlantısı kullanılabilir. Flash kayıt durumu ACTIVE olmalıdır. Yazmadan önce <strong>Cihazdan oku</strong> ile ayarları eşleştirin; yalnızca değişen alanlar yazılır. Mevcut ayarlar <strong>p</strong> komutunun çıktısından okunur. Yazma işlemi cihazın kalıcı hafızasını değiştirir. İlk denemede otomatik yayını kapalı tutmanız önerilir.</div>
 
@@ -76,7 +76,7 @@
     <div class="ble-metric"><span>Son veri</span><strong id="bleLast">—</strong></div>
     <div class="ble-metric"><span>Komut testi</span><strong id="bleTest">—</strong></div>
   </div>
-  <p class="ble-state" id="bleCfgState" role="status">Önce Bluetooth ile bağlanıp “BLE Ayarları Oku” seçin. Formdaki mevcut değerler dolacak. Kaydetmek için Kaydetme açık anahtarını açın.</p>
+  <p class="ble-state" id="bleCfgState" role="status">Bluetooth bağlanınca ayarlar otomatik okunur. Gerekirse “BLE Ayarları Oku” ile yenileyin. Kaydetmek için Kaydetme açık anahtarını açın.</p>
   <p class="ble-state" id="bleHelp" role="status">Android telefonda Chrome ile açın. Önce nRF Connect'ten bağlantıyı kesin, ardından “Bluetooth ile bağlan” düğmesine dokunun.</p>
   <details><summary>Bluetooth haberleşme günlüğü</summary><pre id="bleLog">BLE paneli hazır.</pre></details>
 </section>
@@ -197,10 +197,10 @@ function setOledButtons(){
   const direct=(firmwareMode==='direct');
   // V0.9.13'te OLED komutlari yok, V0.9.14'te var.
   // Ayrim cihazdan gercek [OLED] yaniti gelmesine dayanir.
-  const oledDestekli=connected && sawOledSettings;
+  const oledDestekli=(connected && sawOledSettings) || (!!bleServer?.connected && !!bleDeviceSnapshot);
   $('oledDriver').disabled=!oledDestekli;
   $('oledSleep').disabled=!oledDestekli;
-  if(direct && !sawOledSettings)
+  if(direct && !sawOledSettings && !bleServer?.connected)
     $('oledLive').textContent='SX1268 V0.9.13: OLED komutlari desteklenmiyor. V0.9.14 firmware gerekir.';
   for(const id of ['oledWakeBtn','oledTestBtn']) $(id).disabled=!connected||!sawOledSettings;
   $('oledConfirmBtn').disabled=!connected||!sawOledSettings;
@@ -461,6 +461,7 @@ function bleOnValue(event){
 function bleOnDisconnected(){
   bleWriteChar=null; bleNotifyChar=null; bleServer=null; bleTextPending='';
   bleDeviceSnapshot=null; bleCfgCollect=null;
+  setOledButtons();
   bleSetLockClosed();
   msgUpdateConnection(false);
   bleRejectWaiters('Bağlantı kesildi');
@@ -517,6 +518,9 @@ $('bleConnectBtn').onclick=async()=>{
     await bleSend('cfg lock?');
     await bleSend('msg hello');
     await bleSend('msg inbox');
+    // Populate settings automatically for BLE-only use.
+    try { await bleReadSettings(); }
+    catch(e) { $('bleCfgState').textContent='⚠ BLE ayarları otomatik okunamadı: '+e.message+' — BLE Ayarları Oku ile tekrar deneyin.'; bleNote('[BLE CFG] '+e.message); }
   }catch(e){
     bleNote('[BLE HATA] '+e.message);
     if(bleServer?.connected){try{bleServer.disconnect();}catch{}}
@@ -606,11 +610,12 @@ function bleReadForm(data){
  deviceSnapshot=null;
  bleDeviceSnapshot={...snap};
  bleDeviceSnapshot.chip=data.chip; bleDeviceSnapshot.seq=data.seq;
+ setOledButtons();
  $('bleCfgState').textContent='✓ BLE ayarları okundu: '+data.callsign+' / '+data.chip+' / Direct Flash '+data.direct+' / seq='+data.seq;
  bleUpdateLockButtons();
 }
 function bleHandleResponse(line){
- if(line==='CFG|BEGIN|V0.9.23' || line==='CFG|BEGIN|V0.9.22'){
+ if(/^CFG\|BEGIN\|V[0-9]+\.[0-9]+\.[0-9]+(?:\.[0-9]+)?$/.test(line)){
    bleCfgCollect={};
    $('bleCfgState').textContent='Bluetooth üzerinden ayarlar alınıyor…';
  }else if(line==='CFG|END' && bleCfgCollect){
@@ -620,7 +625,7 @@ function bleHandleResponse(line){
      $('bleCfgState').textContent='⚠ BLE ayar cevabı eksik; tekrar oku.';
    }else if(data.direct!=='ACTIVE'){
      $('bleCfgState').textContent='⚠ Direct Flash ACTIVE değil, yazma kapalı.';
-     bleDeviceSnapshot=null;bleUpdateLockButtons();
+     bleDeviceSnapshot=null;bleUpdateLockButtons();setOledButtons();
    }else bleReadForm(data);
  }else if(line.startsWith('CFG|') && bleCfgCollect){
    const payload=line.slice(4),at=payload.indexOf('=');
@@ -672,7 +677,7 @@ function bleCheckForm(s){
 async function bleReadSettings(){
  if(bleSaveBusy)throw Error('Kaydetme sürüyor.');
  bleDeviceSnapshot=null;bleCfgCollect=null;
- bleUpdateLockButtons();
+ bleUpdateLockButtons();setOledButtons();
  $('bleCfgState').textContent='BLE ayarları isteniyor…';
  const done=bleWait('CFG|END',18000);
  await bleSend('cfg?');await done;
@@ -958,7 +963,8 @@ function initB7Tabs(){
  main.insertBefore(quick,usbActions);main.insertBefore(nav,usbActions);
  for(const id of ['messages','live','settings','logs'])main.insertBefore(pane[id],usbActions);
  pane.messages.appendChild(msgPanel);pane.live.append(blePanel,liveCard);pane.settings.append(usbActions,usbNotice,settingsLayout);pane.logs.append(logCard);
- $('quickBleConnectBtn').onclick=()=>$('bleConnectBtn').click();$('quickBleDisconnectBtn').onclick=()=>$('bleDisconnectBtn').click();
+ $('bleConnectBtn').style.display='none';$('bleDisconnectBtn').style.display='none';
+  $('quickBleConnectBtn').onclick=()=>$('bleConnectBtn').click();$('quickBleDisconnectBtn').onclick=()=>$('bleDisconnectBtn').click();
  $('quickUsbConnectBtn').onclick=()=>$('connectBtn').click();$('quickUsbDisconnectBtn').onclick=()=>$('disconnectBtn').click();
 }
 initB7Tabs();
