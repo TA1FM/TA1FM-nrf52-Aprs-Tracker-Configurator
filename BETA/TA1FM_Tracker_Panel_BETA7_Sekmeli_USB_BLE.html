@@ -516,7 +516,7 @@ $('bleConnectBtn').onclick=async()=>{
     await bleSend('info');
     await bleSend('cfg lock?');
     await bleSend('msg hello');
-    await msgSendCommand('msg inbox');
+    await bleSend('msg inbox');
   }catch(e){
     bleNote('[BLE HATA] '+e.message);
     if(bleServer?.connected){try{bleServer.disconnect();}catch{}}
@@ -889,7 +889,7 @@ async function msgRefreshInbox(){
   msgInboxInFlight=true;
   msgInboxStartedAt=Date.now();
   try{
-    await bleSend('msg inbox');
+    await msgSendCommand('msg inbox');
   }catch(e){
     msgInboxInFlight=false;
     msgInfo('Gelen kutusu okunamadı: '+e.message);
