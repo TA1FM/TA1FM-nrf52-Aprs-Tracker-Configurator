@@ -723,6 +723,8 @@ let msgInboxRows=[],msgInboxCollect=null;
 let msgOutbox=null;
 let msgLastOutgoingText='',msgLastOutgoingTo='';
 let msgLastOutgoingId='',msgLastOutgoingTime=0;
+let msgPendingText='',msgPendingTo='';
+let msgInboxStartedAt=0;
 let msgLastInboxRefresh=0,msgInboxInFlight=false;
 const MSG_AUTO_REFRESH_MS=15000;
 const MSG_VALID_CALL=/^[A-Z0-9]{3,6}(?:-(?:[0-9]|1[0-5]))?$/;
@@ -731,6 +733,7 @@ function msgUpdateConnection(connected){
   msgConnected=connected;
   if(!connected){
     msgB6=false;msgInboxCollect=null;msgInboxInFlight=false;
+    msgPendingText='';msgPendingTo='';
     msgOutbox=null;
     $('msgBleVersion').textContent='Bağlantı yok';
     $('msgTxState').textContent='—';$('msgTxProgress').textContent='—';
@@ -789,7 +792,7 @@ function msgOnBleLine(line){
     msgSetReady();
     const n=Number(line.slice('MSG|INBOX|BEGIN|'.length));
     if(!Number.isInteger(n)||n<0||n>10){msgInfo('Geçersiz mesaj sayısı');return;}
-    msgInboxCollect={expect:n,rows:[]};
+    msgInboxCollect={expect:n,rows:[]};msgInboxStartedAt=Date.now();
     return;
   }
   if(line==='MSG|INBOX|END'){
@@ -827,8 +830,12 @@ function msgOnBleLine(line){
   }
   if(line.startsWith('MSG|QUEUED|')){
     const p=line.split('|');
-    msgLastOutgoingTo=p[2]||msgLastOutgoingTo;
+    msgLastOutgoingTo=p[2]||msgPendingTo;
     msgLastOutgoingId=p[3]||'';
+    msgLastOutgoingText=msgPendingText;
+    msgLastOutgoingTime=Date.now();
+    msgPendingText='';msgPendingTo='';
+    $('msgText').value='';$('msgLength').textContent='0 / 62';
     $('msgTxState').textContent='QUEUED';
     msgInfo('Mesaj '+msgLastOutgoingId+' gönderim kuyruğuna alındı.');
     msgRender();
@@ -843,6 +850,7 @@ function msgOnBleLine(line){
     msgInfo('Bekleyen mesaj/tekrar gönderimleri iptal edildi.');return;
   }
   if(line.startsWith('MSG|ERR|')){
+    msgPendingText='';msgPendingTo='';
     msgInfo('Mesajlaşma hatası: '+line.slice('MSG|ERR|'.length));return;
   }
 }
@@ -850,6 +858,7 @@ async function msgRefreshInbox(){
   if(!bleServer?.connected)return;
   if(msgInboxInFlight)return;
   msgInboxInFlight=true;
+  msgInboxStartedAt=Date.now();
   try{
     await bleSend('msg inbox');
   }catch(e){
@@ -883,18 +892,24 @@ $('msgSendBtn').onclick=async()=>{
   $('msgSendBtn').disabled=true;
   msgInfo('Gerçek RF mesajı cihazın gönderim kuyruğuna yazılıyor…');
   try{
+    msgPendingText=body;msgPendingTo=target;
     await bleSend('msg send '+target+' '+body);
-    msgLastOutgoingText=body;msgLastOutgoingTo=target;
-    msgLastOutgoingTime=Date.now();msgLastOutgoingId='';
-    msgRender();
-    $('msgText').value='';$('msgLength').textContent='0 / 62';
-    msgInfo('Gönderim komutu BLE üzerinden iletildi; kuyruğa alındı bilgisini bekleyin.');
-  }catch(e){msgInfo('Gönderim başarısız: '+e.message);}
+    msgInfo('Gönderim komutu BLE üzerinden iletildi; cihazın QUEUED yanıtı bekleniyor.');
+  }catch(e){
+    msgPendingText='';msgPendingTo='';
+    msgInfo('Gönderim başarısız: '+e.message);
+  }
   finally{$('msgSendBtn').disabled=!msgConnected||!msgB6;}
 };
 // Opportunistic resync so a lost notification cannot hide incoming RF messages.
 setInterval(()=>{
-  if(!msgConnected||!msgB6||!bleServer?.connected||msgInboxInFlight)return;
+  if(!msgConnected||!msgB6||!bleServer?.connected)return;
+  if(msgInboxInFlight){
+    if(Date.now()-msgInboxStartedAt>20000){
+      msgInboxInFlight=false;msgInboxCollect=null;
+      msgInfo('BLE gelen kutusu zaman aşımı; tekrar deneniyor.');
+    } else return;
+  }
   if(Date.now()-msgLastInboxRefresh>MSG_AUTO_REFRESH_MS){
     msgRefreshInbox();
   }
