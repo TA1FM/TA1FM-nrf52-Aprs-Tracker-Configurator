@@ -988,7 +988,7 @@ function initB7Tabs(){
   const dfuSection=document.createElement('div');dfuSection.style.marginTop='18px';
   const dfuTitle=document.createElement('h3');dfuTitle.textContent='🔄 BLE DFU — V1.1.0 BETA';
   const dfuWarning=document.createElement('p');dfuWarning.className='hint';
-  dfuWarning.textContent='Sadece V1.1.0 BETA destekler. Kaydetme açık olmalı. Başarısız güncellemede USB UF2 kurtarma gerekebilir. Bu düğme firmware göndermez; Bluetooth Güncelleme için,yalnızca AdaDFU modunu açar.';
+  dfuWarning.textContent='Sadece V1.1.0 BETA destekler. Kaydetme açık olmalı. Başarısız güncellemede USB UF2 kurtarma gerekebilir. Bu düğme firmware göndermez; Bluetooth Güncelleme için,yalnızca AdaDFU modunu açar Bluetooth ismi "AdaDfu" olarak görünür andrıid telefon ile "nRF Device Firmware Update" APK Programı ile yazılım güncellemesi yapılır.';
   const dfuBtn=document.createElement('button');dfuBtn.id='bleDfuBtn';dfuBtn.type='button';dfuBtn.className='secondary';dfuBtn.textContent='🔄 BLE DFU Moduna Geç';dfuBtn.disabled=true;
   dfuSection.append(dfuTitle,dfuWarning,dfuBtn);bleSettings.append(dfuSection);
   dfuBtn.onclick=async()=>{
