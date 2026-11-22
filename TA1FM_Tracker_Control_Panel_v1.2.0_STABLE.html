@@ -649,7 +649,7 @@ U('uDfuUsb').onclick=()=>{if(which()!=='usb')return err(Error('USB bağlantısı
 U('uDfuBle').onclick=async()=>{if(which()!=='ble')return err(Error('BLE bağlantısı gerekli'));if(!confirm('BLE DFU moduna geçilecek. Kaydetme izni açık olmalı. Devam?'))return;try{await send('dfu arm');setText('dfuState','DFU ARMED yanıtını kontrol edin.');if(!confirm('15 saniye içinde DFU GO komutu gönderilsin mi?')){await send('dfu cancel');return}await send('dfu go')}catch(e){err(e)}};
 for(const b of document.querySelectorAll('nav.tabs button'))b.addEventListener('click',()=>{const id=b.dataset.pane;document.querySelectorAll('nav.tabs button').forEach(x=>{x.setAttribute('aria-selected',String(x===b));x.tabIndex=x===b?0:-1});document.querySelectorAll('.pane').forEach(p=>p.hidden=p.dataset.pane!==id);});
 for(const id of ['topRead','topSave','uMsgInbox','uMsgStatus','uMsgCancel','uMsgSend','quickRead','quickSave','notiRead','notiSave','bzTest','tlOn','tlOff','tlStateBtn','tlCancel','tlDefs','uDfuUsb','uDfuBle'])U(id).classList.add('connection-needed');
-U('topTabSummary').textContent='Tek bağlantı · Tüm sekmeler ortak';
+U('topTabSummary').textContent='AYARLARI DEĞİŞTİRMEDEN ÖNCE CİHAZDAN OKUYUN.';
 renderPreset();renderInbox();unifiedConnectionUpdate();
 // Existing 0.9.22 STABLE panel handlers remain the source for USB & BLE settings operations.
 // Polling only updates UI labels; it does not send messages or change tabs/connection.
