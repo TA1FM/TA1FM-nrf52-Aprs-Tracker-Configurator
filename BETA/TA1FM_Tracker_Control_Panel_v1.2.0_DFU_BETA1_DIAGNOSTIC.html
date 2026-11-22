@@ -86,18 +86,18 @@ input:not([type=file]):not([type=checkbox]),textarea,select{width:100%;min-heigh
 <label class="check"><input disabled="" id="bleSaveToggle" type="checkbox"/> Kaydetme açık</label>
 </div></section><section class="card"><h2>Firmware / DFU</h2><p class="hint">BLE DFU cihazın bootloader moduna geçmesini sağlar; firmware dosyası bu panelden yüklenmez. Önce kaydetme iznini aç. USB DFU sırasında bağlantı kapanır.</p><div class="actions"><button id="uDfuBle" class="secondary">BLE DFU hazırlığı</button><button id="uDfuUsb" class="secondary">USB DFU</button></div><p class="micro" id="dfuState">Yalnızca bilinçli güncelleme için.</p></section>
 <section class="card wide" id="ta1fmDfuBetaDiagnostics">
-<h2>🧪 DFU BETA1 — ZIP ve AdaDFU bağlantı testi</h2>
-<p class="hint"><strong>Salt okunur test!</strong> Bu bölüm flash'a dosya göndermez, DFU komutu yazmaz veya cihazı yeniden başlatmaz. GitHub'daki STABLE panelden ayrı bir denemedir.</p>
+<h2>🧪 DFU BETA1 — ZIP yapısı ve AdaDFU test sonucu</h2>
+<p class="hint"><strong>Test sonucu:</strong> Cihaz <code>AdaDFU</code> olarak görüldü. Ancak Nordic Legacy DFU servis UUID’si (<code>00001530-1212-efde-1523-785feabcd123</code>) <a href="https://github.com/WebBluetoothCG/registries/blob/master/gatt_blocklist.txt" target="_blank" rel="noopener noreferrer">Web Bluetooth GATT engelleme listesinde</a> olduğundan Chrome/Edge içinden bu servisle bağlantı ve firmware aktarımı yapılamıyor. Bu BETA, ZIP yapısını salt okunur kontrol eder; firmware yüklemez.</p>
 <div class="actions">
 <label class="filebtn">📦 DFU ZIP seç <input id="taDfuZip" type="file" accept=".zip,application/zip,application/x-zip-compressed"></label>
-<button class="secondary" id="taDfuScan">AdaDFU bul ve bağlan</button>
-<button class="secondary" id="taDfuScanAll">BLE cihaz listesinden seç</button>
+<button class="secondary" id="taDfuScan" disabled title="Web Bluetooth Nordic Legacy DFU servisine erişimi engeller.">AdaDFU: tarayıcıdan erişim engelli</button>
+<button class="secondary" id="taDfuScanAll" disabled title="Geniş tarama da engelli DFU servisine erişim yetkisi vermez.">Geniş BLE tarama devre dışı</button>
 <button class="secondary" id="taDfuDisconnect">Test bağlantısını kes</button>
 </div>
 <p class="micro" id="taDfuFileStatus">Henüz ZIP seçilmedi. Bu test yalnızca ZIP dizinini okur, firmware doğrulaması yapmaz.</p>
-<p class="micro" id="taDfuBleStatus">AdaDFU bağlantısı kurulmadı.</p>
-<pre id="taDfuTestLog" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:240px;overflow-y:auto" aria-live="polite">BETA1 hazır. Önce ZIP seçin, daha sonra cihazı AdaDFU moduna alıp bağlantıyı deneyin.</pre>
-<p class="hint">Önce normal BLE bağlantısından veya OLED/USB yönteminden AdaDFU moduna geçin. Ardından burada AdaDFU cihazını seçin. İzin penceresi tarayıcı tarafından açılır. Gerçek firmware yüklemesi bu BETA1 sürümünde KAPALIDIR.</p>
+<p class="micro" id="taDfuBleStatus">AdaDFU cihazı görüldü; Web Bluetooth üzerinden Legacy DFU servisine erişim engelleniyor.</p>
+<pre id="taDfuTestLog" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:240px;overflow-y:auto" aria-live="polite">BETA1 test sonucu: ZIP yapısı okundu, AdaDFU görüldü. Chrome/Edge Legacy DFU servisini engelliyor; firmware aktarımı yapılmadı.</pre>
+<p class="hint">USB bağlanınca AdaDFU görünmesi, bootloader geçişinin cihaz/besleme/zamanlama tarafında ayrıca incelenmesini gerektiriyor; nedeni henüz kesinleşmedi. Firmware güncellemek için Android Nordic DFU uygulamasını veya Legacy DFU destekleyen yerel bir PC uygulamasını kullanın. Güncel STABLE panel ve firmware değiştirilmedi.</p>
 </section><section class="card"><h2>JSON yedek</h2><div class="actions"><button class="secondary" id="exportBtn">⬇ Ayarları indir (JSON)</button><label class="filebtn">⬆ Yedek dosyası aç<input accept=".json,application/json" id="importFile" type="file"/></label></div></section><section class="card wide"><h2>Seri Monitör / Komutlar</h2><pre aria-live="polite" id="log">TA1FM ayar paneli hazır. Cihaza bağlanmak için üstteki düğmeye basın.</pre><div class="frow" style="align-items:end"><div class="field" style="flex:1"><label for="manualCmd">Elle komut gönder</label><input id="manualCmd" placeholder="p, comment?, status? ..." spellcheck="false"/></div><button class="secondary" disabled="" id="sendBtn">Gönder</button><button class="secondary" id="clearBtn">Log temizle</button></div></section></div></div><div class="legacy-usb-actions"><div class="actions"><button class="primary" id="connectBtn">🔌 Cihaza bağlan</button><button class="secondary" disabled="" id="disconnectBtn">Bağlantıyı kes</button><button class="secondary" disabled="" id="readBtn">↻ Cihazdan oku (p)</button><span aria-live="polite" class="read-state" id="readState" role="status">Cihaz bağlanmadı</span><button disabled="" id="saveBtn">⬆ Ayarları cihaza yaz</button></div><span id="connectionState"></span></div><div id="browserNotice" class="legacy-usb-actions"></div><p class="foot">TA1FM nrf52 Tracker - USB ve BLUETOOTH Arayüzü - AYARLARI DEĞİŞTİRMEDEN ÖNCE CİHAZDAN OKUYUN.</p>
 <script>
 
