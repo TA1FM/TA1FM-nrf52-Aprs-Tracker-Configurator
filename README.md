@@ -1,51 +1,47 @@
-# TA1FM nrf52 Tracker — USB + BLE Control Panel
+# TA1FM nrf52 Tracker — USB + BLE Kontrol Paneli
 
-## ✅ Güncel ana panel / Current control panel
+## ✅ Güncel firmware: v1.3.0 STABLE (24 Kasım 2026)
 
-**[🌐 TA1FM Tracker Control Panel — Aç / Open](https://ta1fm.github.io/TA1FM-nrf52-Aprs-Tracker-Configurator/)**
+**[🌐 Güncel USB/BLE Kontrol Panelini Aç](https://ta1fm.github.io/TA1FM-nrf52-Aprs-Tracker-Configurator/)**
 
-**Ana HTML:** [TA1FM_Tracker_Control_Panel.html](./TA1FM_Tracker_Control_Panel.html) · **index.html** bu dosyaya yönlendirir.
+Ana sayfadaki `index.html`, v1.3.0 STABLE firmware ile uyumlu **[birleşik v1.3.0 BETA2 paneline](./BETA/TA1FM_Tracker_Control_Panel_v1.3.0_BETA2.html)** yönlendirir. **BETA2**, panel dosyasının geliştirme sürümüdür; firmware'in **STABLE** durumunu değiştirmez. Panelin kendisine veya çalışan firmware mantığına müdahale edilmemiştir.
 
-Bu panel, **TA1FM nrf52 Tracker v1.0.0 STABLE** ile kullanılan **BETA-7 tabanlı USB + BLE sekmeli arayüzdür**. Ana sayfa artık eski v0.9.22 paneli değildir.
+**[📦 v1.3.0 STABLE Release ve firmware indirmeleri](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker/releases/tag/v1.3.0)** · [Firmware deposu](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker) · [v1.3.0 sürüm notları](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker/blob/main/RELEASE_NOTES_V1_3_0_STABLE.md)
 
-**[🚀 v1.0.0 STABLE firmware ve indirmeler](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker/releases/tag/v1.0.0)** · [Firmware deposu](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker)
+## Panel Özellikleri
 
-## Panel sekmeleri
+- **Tek USB/BLE bağlantısı:** Sekmeler arasında bağlantı korunur.
+- **Durum / Sistem:** GPS, LoRa, BLE, pil, sayaçlar ve cihaz durumu.
+- **APRS / GPS / Radyo:** SMART/FIXED beacon, Tracker/DIGI, sembol, SX1262/SX1268 ve RF ayarları.
+- **Mesajlar:** Gönderim ve ACK durumu, gelen kutusu, hazır mesajlar ve tarayıcı oturumu boyunca gönderim geçmişi.
+- **OLED / Bildirim:** Ekran, uyku, mesajla uyandırma ve isteğe bağlı buzzer.
+- **Telemetri:** Pil ve isteğe bağlı BME280 ölçümleri; BME280 yoksa pil telemetrisi korunur.
+- **DFU:** Uyumlu cihazı BLE DFU moduna alma; firmware ZIP aktarımı **Nordic DFU uygulamasıyla** yapılır.
+- **Ayarlar:** Okuma, kaydetme ve JSON ayar yedeği.
 
-- **Mesajlar:** USB veya BLE üzerinden APRS mesaj gönderme/alma, gelen kutusu ve ACK takibi; 1/2/3 toplam RF denemesi seçimi.
-- **Canlı:** GPS, RF, pil, son duyulan istasyon, sayaçlar ve BLE canlı durum.
-- **Ayarlar:** Cihaz yapılandırması, SMART Beacon, LoRa seçimi, OLED ve JSON ayar yedeği.
-- **Kayıtlar:** USB seri kayıtları; BLE haberleşme kayıtları Canlı bölümünde.
+## Bağlantı
 
-**Not:** Mesajlar yalnızca cihazın RAM'inde tutulur; kapatıp açınca geçmiş silinir. Panelden mesajlaşma özellikleri için **v1.0.0 (V0.9.26 BETA-7 tabanlı)** veya uyumlu firmware kullanın.
+**USB:** Chrome/Edge'de paneli açın, Arduino Seri Monitör'ü kapatın, cihazın USB COM portuna bağlanın ve ayarları okuyun.
 
-## USB ile bağlantı
+**BLE:** HTTPS üzerinden Web Bluetooth destekleyen tarayıcı kullanın. `nRF52_Lora_Tracker` cihazına bağlanın. Değişiklikleri kaydetmeden önce **Kaydetme Açık** iznini etkinleştirin; bu, güçlü bir güvenlik doğrulaması değildir.
 
-1. Bilgisayarda USB Web Serial destekleyen **Chrome veya Edge** açın ve cihazı veri kablosuyla bağlayın.
-2. Arduino IDE Seri Monitör gibi aynı COM portunu kullanan uygulamaları kapatın.
-3. **USB ile bağlan** işlemini yapıp ayarları cihazdan okuyun. Değişiklikleri göndermeden önce doğru cihazın bağlı olduğundan emin olun.
-4. Mesajlar sekmesinde iletişim için **USB** bağlantısını seçin.
+**APRS mesaj geçmişi:** Cihazda yalnızca son 3 gelen mesaj RAM'de tutulur; güç kesilince silinir. Web panelinin gönderim geçmişi de tarayıcı oturumuyla sınırlıdır.
 
-## Bluetooth BLE ile bağlantı
+## Belgeler
 
-1. Bluetooth açıkken, BLE erişimi destekleyen tarayıcıda paneli **HTTPS** üzerinden açın.
-2. **nRF52_Lora_Tracker** cihazını seçerek BLE bağlantısı kurun.
-3. Canlı bilgileri veya ayarları okuyun; Mesajlar bölümünde iletişim için **BLE** bağlantısını seçin.
-4. Ayar kaydetmek gerektiğinde **Kaydetme Açık** anahtarını kullanın. Bu bir parola/güvenlik önlemi değildir.
+- [Türkçe kurulum](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker/blob/main/KURULUM_TR.md)
+- [Türkçe kullanım](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker/blob/main/KULLANIM_TR.md)
+- [Türkçe seri konsol komutları](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker/blob/main/SERI_KONSOL_KOMUT_REHBERI_TR.md)
+- [English installation](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker/blob/main/INSTALL_EN.md)
+- [English user guide](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker/blob/main/USER_GUIDE_EN.md)
 
-## Önceki paneller / Archive
+## Eski paneller / Archive
 
-- [BETA-7 sekmeli panel kopyası](./BETA/TA1FM_Tracker_Panel_BETA7_Sekmeli_USB_BLE.html)
-- [BETA-7 panel notları](./BETA/README_BETA7_SEKMELI_TR.md)
-- [v0.9.23 eski panel](./beta_v0_9_23.html)
-- [v0.9.22 ve daha eski BLE panel dosyaları](./ble.html)
+- [Eski v1.2.0 STABLE paneli](./TA1FM_Tracker_Control_Panel_v1.2.0_STABLE.html)
+- [v1.0.0 ana panel dosyası](./TA1FM_Tracker_Control_Panel.html)
+- [BETA-7 sekmeli panel](./BETA/TA1FM_Tracker_Panel_BETA7_Sekmeli_USB_BLE.html)
+- [v0.9.23 paneli](./beta_v0_9_23.html)
 
-Eski paneller arşiv amaçlı korunur. Güncel kullanım için **ana bağlantıyı** kullanın.
+Eski dosyalar geri dönüş ve referans amacıyla korunmuştur. Güncel kullanımda **ana panel bağlantısını** tercih edin.
 
-## Dokümantasyon
-
-- [Türkçe kurulum](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker/blob/main/KURULUM_TR.md) *(eski sürüm ayrıntıları içerebilir)*
-- [Türkçe kullanım](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker/blob/main/KULLANIM_TR.md) *(eski sürüm ayrıntıları içerebilir)*
-- [English user guide](https://github.com/TA1FM/TA1FM-nrf52-Aprs-Tracker/blob/main/USER_GUIDE_EN.md) *(may describe older versions)*
-
-**73 de TA1FM** 📡
+**73 de TA1FM 📡**
